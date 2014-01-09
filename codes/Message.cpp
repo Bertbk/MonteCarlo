@@ -1,12 +1,14 @@
-#include<iostream>
-#include<fstream>
-#include<stdlib.h>
-#include<stdio.h>
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
+#include <stdio.h>
 #include <vector>
-#include<time.h>
+#include <time.h>
 #include <stdarg.h>
-#include<math.h>
+#include <math.h>
 #include <string>
+#include <string.h>
+//#include <cstring>
 
 #include "Message.h"
 
@@ -45,6 +47,8 @@ double Message::_sdt = sqrt(_dt);
 //choice of function (for final computation)
 int  Message::NFUN = 1;
 std::vector<int> Message::_FunChoice(NFUN);
+std::string Message::_paramFile = "param";
+std::string Message::_resDir = "res";
 
 //Message
 //-------
@@ -67,8 +71,8 @@ void Message::Initialize(int argc, char *argv[])
   while (i < argc) {
     if (argv[i][0] == '-') {
       if (!strcmp(argv[i]+1, "v"))          { _verbosity = atof(argv[i+1]) ; i+=2 ; }
-      else if (!strcmp(argv[i]+1, "check")) { Message::Check(); Message::Exit(EXIT_SUCCESS);}
-      else if (!strcmp(argv[i]+1, "par"))   { _paramFile=argv[i+1]; i+=2; }
+      else if (!strcmp(argv[i]+1, "check")) { Message::Check(); Message::Finalize(EXIT_SUCCESS);}
+      else if (!strcmp(argv[i]+1, "par"))   { _paramFile = argv[i+1]; i+=2; }
     }
     else
       {
@@ -138,11 +142,11 @@ void Message::Check()
 
 void Message::Parse()
 {
-  Message::Info("Parse...");  
+  Message::Info("Parse param file \"%s\"...", _paramFile.c_str());
 }
 
 
-void Message::Exit(int status)
+void Message::Finalize(int status)
 {
 #if defined(WITH_MPI)
   MPI_Barrier(MPI_COMM_WORLD);

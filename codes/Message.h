@@ -8,6 +8,7 @@
 class Message{
  private:
   static std::string _paramFile;
+  static std::string _resDir;
   static int _verbosity;
   static int _myRank, _nb_proc;
   //function (number available, which one are choosen, ...)
@@ -42,7 +43,7 @@ class Message{
   static int GetNProc(){return _nb_proc;};
   static void Check();
   static void Parse();
-  static void Exit(int status);
+  static void Finalize(int status);
   //=======================
   // PARAMETERS FUNCTIONS
   //=======================

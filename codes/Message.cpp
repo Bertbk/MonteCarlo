@@ -42,12 +42,9 @@ double Message::_T   = 500.0;
 double Message::_dt  = 0.0001;
 double Message::_sdt = sqrt(_dt);
 
-//folder of trajectories
-std::string Message::_TrajDir = "trajectories";
 //choice of function (for final computation)
-int Message::_FunChoice = 0;
-
-
+int  Message::NFUN = 1;
+std::vector<int> Message::_FunChoice(NFUN);
 
 //Message
 //-------
@@ -70,9 +67,8 @@ void Message::Initialize(int argc, char *argv[])
   while (i < argc) {
     if (argv[i][0] == '-') {
       if (!strcmp(argv[i]+1, "v"))          { _verbosity = atof(argv[i+1]) ; i+=2 ; }
-      else if (!strcmp(argv[i]+1, "traj"))  { _TrajDir = argv[i+1] ; i+=2 ; }
-      else if (!strcmp(argv[i]+1, "fun"))   { _FunChoice = atof(argv[i+1]) ; i+=2 ; }
       else if (!strcmp(argv[i]+1, "check")) { Message::Check(); Message::Exit(EXIT_SUCCESS);}
+      else if (!strcmp(argv[i]+1, "par"))   { _paramFile=argv[i+1]; i+=2; }
     }
     else
       {
@@ -80,6 +76,8 @@ void Message::Initialize(int argc, char *argv[])
 	i++;
       }
   }
+  //Parse param file
+  Message::Parse();
 }
 
 
@@ -136,6 +134,11 @@ void Message::Warning(int level, const char *format, ...)
 void Message::Check()
 {
   Message::Info("Check...");  
+}
+
+void Message::Parse()
+{
+  Message::Info("Parse...");  
 }
 
 

@@ -7,10 +7,12 @@
 // a class to manage messages
 class Message{
  private:
+  static std::string _paramFile;
   static int _verbosity;
   static int _myRank, _nb_proc;
-  static std::string _TrajDir; //folder of trajectories
-  static int _FunChoice; //choice of the functions to compute final result
+  //function (number available, which one are choosen, ...)
+  static int NFUN; //this is hard coded !
+  static std::vector<int> _FunChoice; //choice of the functions to compute final result
   //---------------------------
   //Parameters of simulations
   //---------------------------
@@ -39,6 +41,7 @@ class Message{
   static int GetCommRank(){return _myRank;};
   static int GetNProc(){return _nb_proc;};
   static void Check();
+  static void Parse();
   static void Exit(int status);
   //=======================
   // PARAMETERS FUNCTIONS

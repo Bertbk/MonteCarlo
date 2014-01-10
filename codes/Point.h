@@ -1,24 +1,28 @@
-#ifndef _ResToCompute_H_
-#define _ResToCompute_H_
+#ifndef _Point_H_
+#define _Point_H_
 
 #include<math.h>
-
+//#include<vector>
 
 //Class that contains every points to be computed 
 class Point{
  private:
-  int _id; //global id, same as in Results
+  int _id; //id of the point
   double _xi, _y;
-  int _MC; //number of simu to do
+  std::vector<int> _MC; //number of simu already done (for each function)
+  std::vector<int> _MC_to_do; //number of simu to do (for each function)
  public:
   static int _npoints;
   Point();
   Point(double xi, double y, int MC);
   Point(int id, double xi, double y, int MC);
-  double GetX(){return _xi;};
-  double GetY(){return _y;};
-  int GetMC(){return _MC;};
   int GetId(){return _id;};
+  double GetXi(){return _xi;};
+  double GetY(){return _y;};
+  std::vector<int> GetMC(){return _MC;};
+  int GetMC(int i){return _MC[i];};
+  std::vector<int> GetMC_to_do(){return _MC_to_do;};
+  int GetMC_to_do(int i){return _MC_to_do[i];};
   void GetValues(double *xi, double *y, int *MC_loc){(*xi)=_xi; (*y)=_y; (*MC_loc)=_MC;};
   void GetValues(int *id, double *xi, double *y, int *MC_loc){(*id)=_id; GetValues(xi,y,MC_loc);};
   //set stuffs

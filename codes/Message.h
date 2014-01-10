@@ -7,16 +7,20 @@
 // a class to manage messages
 class Message{
  private:
+  static int _ComputeMC, _Pos; // Launch MC simulations or do only post-processing ?
   static std::string _paramFile;
   static std::string _resDir;
   static int _verbosity;
   static int _myRank, _nb_proc;
-  //function (number available, which one are choosen, ...)
-  static int NFUN; //this is hard coded !
-  static std::vector<int> _FunChoice; //choice of the functions to compute final result
   //---------------------------
   //Parameters of simulations
   //---------------------------
+  //function (number available, which one are choosen, ...)
+  static int _NFUN; //this is hard coded !
+  static std::vector<int> _FunChoice; //choice of the functions to compute final result
+  //User wanted values
+  static std::vector<int> _desired_MC;
+  //constants
   static double _deuxpi;
   static double _lambda;
   //parameters of the oscillator

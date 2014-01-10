@@ -1,14 +1,15 @@
 #include <iostream>
 #include <fstream>
+#include <sstream> //for osstream
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
 #include <time.h>
 #include <stdarg.h>
 #include <math.h>
-#include <string>
 #include <string.h>
-//#include <cstring>
+#include <string>
+#include <algorithm> //for remove_if, isspace
 
 #include "Message.h"
 
@@ -21,8 +22,9 @@
 #endif
 
 
-using namespace std;
-
+//using namespace std;
+int Message::_ComputeMC = 0;
+int Message::_Pos = 0;
 int Message::_verbosity = 4;
 int Message::_myRank = 0;
 int Message::_nb_proc = 1;
@@ -45,10 +47,11 @@ double Message::_dt  = 0.0001;
 double Message::_sdt = sqrt(_dt);
 
 //choice of function (for final computation)
-int  Message::NFUN = 1;
-std::vector<int> Message::_FunChoice(NFUN);
+int  Message::_NFUN = 4;
+std::vector<int> Message::_FunChoice(_NFUN);
+std::vector<int> Message::_desired_MC(_NFUN);
 std::string Message::_paramFile = "param";
-std::string Message::_resDir = "res";
+std::string Message::_resDir = "res/";
 
 //Message
 //-------
@@ -68,11 +71,14 @@ void Message::Initialize(int argc, char *argv[])
   Message::Info("Launched with OpenMP (%d threads)", _nb_threads);
 #endif
   int i = 1;
+  bool doCheckOnly = 0;
   while (i < argc) {
     if (argv[i][0] == '-') {
-      if (!strcmp(argv[i]+1, "v"))          { _verbosity = atof(argv[i+1]) ; i+=2 ; }
-      else if (!strcmp(argv[i]+1, "check")) { Message::Check(); Message::Finalize(EXIT_SUCCESS);}
-      else if (!strcmp(argv[i]+1, "par"))   { _paramFile = argv[i+1]; i+=2; }
+      if (!strcmp(argv[i]+1, "check"))    { doCheckOnly = 1; i++;}
+      else if (!strcmp(argv[i]+1, "v"))   { _verbosity = atof(argv[i+1]) ; i+=2 ; }
+      else if (!strcmp(argv[i]+1, "par")) { _paramFile = argv[i+1]; i+=2; }
+      else if (!strcmp(argv[i]+1, "MC")) { _ComputeMC = 1; i++; }
+      else if (!strcmp(argv[i]+1, "pos")) { _Pos = 1; i++; }
     }
     else
       {
@@ -80,8 +86,20 @@ void Message::Initialize(int argc, char *argv[])
 	i++;
       }
   }
+  for(int i =0; i<_NFUN; i++)
+    {
+      _desired_MC[i] = 0;
+      _FunChoice[i] = 0;
+    }
   //Parse param file
   Message::Parse();
+  //Print info
+  if(doCheckOnly) { Message::Check(); Message::Finalize(EXIT_SUCCESS);}
+  else {if (_verbosity > 0) Message::Check();}
+
+  //Create result folder (if does not exist)
+  std::string command = "if ! test -d " + _resDir + "; then mkdir "+ _resDir+"; fi";
+  system(command.c_str());
 }
 
 
@@ -137,15 +155,20 @@ void Message::Warning(int level, const char *format, ...)
 
 void Message::Check()
 {
-  Message::Info("Check...");  
+  Message::Info("Check param file...");
+  Message::Info("Res directory: %s", _resDir.c_str());
+  Message::Info("Compute MC: %s", _ComputeMC?"Yes":"No");
+  Message::Info("Post-Processing: %s", _Pos?"Yes":"No");
+  Message::Info("Number of function available: %d", _NFUN);
+  for (int i =0; i<_NFUN; i++)
+    {
+      if(_FunChoice[i])  Message::Info("Function %d: Yes", i);
+      else  Message::Info("Function %d: No (setting MC[%d]=0)", i);
+      Message::Info("MC[%d] desired=%d %s", i, _desired_MC[i], _ComputeMC?"":"(Useless)");
+    }
 }
 
-void Message::Parse()
-{
-  Message::Info("Parse param file \"%s\"...", _paramFile.c_str());
-}
-
-
+//To quit properly like a boss
 void Message::Finalize(int status)
 {
 #if defined(WITH_MPI)
@@ -155,6 +178,54 @@ void Message::Finalize(int status)
   if(status == EXIT_SUCCESS)
     Message::Info("Exit with success");
   else
-    Message::Info("Exit with error (status %d)", status);
+    Message::Warning("Exit with error (status %d)", status);
   exit(status);
+}
+
+//Parse param file to find the parameters wanted by the user ^_^
+void Message::Parse()
+{
+  Message::Info("Parse param file \"%s\"...", _paramFile.c_str());
+  std::ifstream pfile(_paramFile.c_str());
+  if(!pfile.is_open())
+    {
+      Message::Warning("Paramameters file \"%s\" not found, exiting badly", _paramFile.c_str());
+      Message::Finalize(EXIT_FAILURE);
+    }
+  else
+    {
+      std::string line;
+      while (getline(pfile, line))
+	{
+	  //remove spaces
+	  line.erase(remove_if(line.begin(), line.end(), isspace), line.end());
+	  //check for equal sign
+	  std::size_t found = line.find('=');
+	  if(found > line.size()) Message::Warning("This line is unreadable: %s", line.c_str());
+	  else
+	    {
+	      std::string keyword=line.substr(0,found);
+	      std::string c_value=line.substr(found+1, line.size()-found);
+	      //Check keyword
+	      if(keyword == "resDir"){//set the "/" at the end of the folder directory's name (or not)
+		if(c_value[c_value.size()-1] == '/') _resDir = c_value;
+		else _resDir = c_value + "/";
+	      }
+	      for (int i=0; i<_NFUN; i++)
+		{
+		  std::ostringstream oss;
+		  oss << i;
+		  std::string mmc = "MC_" + oss.str();
+		  std::string func = "FUN_" + oss.str();
+		  int int_value = atoi(c_value.c_str());
+		  if(keyword == mmc) { _desired_MC[i] = int_value;}
+		  if(keyword == func){ _FunChoice[i] = (int_value ==0 ?0:1);}
+		}
+	    }
+	}
+      pfile.close();
+      //last check to put MC = 0 if function is not choiced (security ?)
+      for(int i =0; i< _NFUN; i++)
+	_desired_MC[i] = _desired_MC[i]*_FunChoice[i];
+    }
 }

@@ -7,7 +7,9 @@
 // a class to manage messages
 class Message{
  private:
-  static int _ComputeMC, _Pos; // Launch MC simulations or do only post-processing ?
+  static int _ComputeMC; // Launch MC simulations ?
+  static int _Pos; // Only (re-)compute average/std deviation ?
+  static int _Gmsh;  // Print on Gmsh file
   static std::string _paramFile;
   static std::string _resDir;
   static int _verbosity;
@@ -45,6 +47,9 @@ class Message{
   static int Precision(){return 17;} //set decimal precision for output file
   static int GetCommRank(){return _myRank;};
   static int GetNProc(){return _nb_proc;};
+  static int GetComputeMC(){return _ComputeMC;};
+  static int GetPos(){return _Pos;};
+  static int GetGmsh(){return _Gmsh;};
   static void Check();
   static void Parse();
   static void Finalize(int status);

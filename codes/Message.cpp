@@ -25,6 +25,7 @@
 //using namespace std;
 int Message::_ComputeMC = 0;
 int Message::_Pos = 0;
+int Message::_Gmsh = 0;
 int Message::_verbosity = 4;
 int Message::_myRank = 0;
 int Message::_nb_proc = 1;

@@ -12,7 +12,11 @@ class Point{
   std::vector<int> _MC; //number of simu already done (for each function)
   std::vector<int> _MC_to_do; //number of simu to do (for each function)
  public:
-  static int _npoints;
+
+  static void ReadAllPoints(std::vector<Point*> *PointDone);
+  static void CreatePointsToDo(std::vector<Point*> *PointToDo, std::vector<Point*> *PointDone);
+
+  /*  static int _npoints;
   Point();
   Point(double xi, double y, int MC);
   Point(int id, double xi, double y, int MC);

@@ -5,19 +5,26 @@
 #include <vector>
 #include<time.h>
 
-#ifndef _MESSAGE_H_
 #include "Message.h"
-#endif
-
-#ifndef _MYRESULTS_H_
-#include "MyResults.h"
-#endif
-
 #include "Point.h"
 
 using namespace std;
 
-int Point::_npoints = 0;
+void Point::ReadAllPoints(std::vector<Point*> *PointDone)
+{
+  //Read all folder and build the right Point
+}
+
+void Point::CreatePointsToDo(std::vector<Point*> *PointToDo, std::vector<Point*> *PointDone)
+{
+  //Use the param file to build point according to :
+  // -- The given grid (param)
+  // -- The already existing point (PointDone)
+  //Destruction of the point must be achieved by the user !
+}
+
+
+/*
 
 //constructor
 Point::Point()
@@ -137,7 +144,7 @@ void Point::PrepareMyFile(char *res_dir, int *file_id)
       fNewRes_aux.open(file_aux);
     }
   *file_id = fcpt;
-
+  
   //create/verify file containing (x,y) coordinate
   char coord_file[128];
   sprintf(coord_file, "%smyCoord.mc", res_dir_loc);
@@ -198,7 +205,9 @@ void Point::LaunchMC(char *traj_dir, int seed)
     }
   fNewRes.close(); 
   */
-}
+/*}
+
+
 
 void Point::ShortCyclePlus(std::vector<std::vector<double> > *trajectories)
 {
@@ -239,3 +248,4 @@ void Point::ShortCyclePlus(std::vector<std::vector<double> > *trajectories)
   (*trajectories).resize(cpt);
   return;
 }
+*/

@@ -8,6 +8,7 @@
 class Point{
  private:
   int _id; //id of the point
+  std::string _IdDir;
   double _xi, _y;
   std::vector<int> _MC; //number of simu already done (for each function)
   std::vector<int> _MC_to_do; //number of simu to do (for each function)
@@ -15,6 +16,14 @@ class Point{
 
   static void ReadAllPoints(std::vector<Point*> *PointDone);
   static void CreatePointsToDo(std::vector<Point*> *PointToDo, std::vector<Point*> *PointDone);
+  //Monte Carlo simulations
+  void LaunchMC();
+  void ShortCyclePlus(std::vector<double> *integrals);
+  //double uniform(){return (1+2)/(1+(double)RAND_MAX);   }
+  static double uniform(){return (1+(double)rand())/(1+(double)RAND_MAX);   }
+  static double gauss(){return sqrt(-2.*log(uniform()))*cos(Message::GetDeuxPi()*uniform());}
+  static double f(double xi, int i);
+  static double gplus(double xi, double y, int i);
 
   /*  static int _npoints;
   Point();

@@ -46,9 +46,11 @@ double Message::_roc = sqrt(1.0 - _ro*_ro);
 double Message::_T   = 500.0;
 double Message::_dt  = 0.0001;
 double Message::_sdt = sqrt(_dt);
-
+//Grid
+double Message::_xi_min=-5, Message::_xi_max=5, Message::_dxi = 0.1;
+double Message::_dy=0.1, Message::_y_min=0, Message::_y_max=5;
 //choice of function (for final computation)
-int  Message::_NFUN = 4;
+const int Message::_NFUN = 4;
 std::vector<int> Message::_FunChoice(_NFUN);
 std::vector<int> Message::_desired_MC(_NFUN);
 std::string Message::_paramFile = "param";
@@ -78,7 +80,7 @@ void Message::Initialize(int argc, char *argv[])
       if (!strcmp(argv[i]+1, "check"))    { doCheckOnly = 1; i++;}
       else if (!strcmp(argv[i]+1, "v"))   { _verbosity = atof(argv[i+1]) ; i+=2 ; }
       else if (!strcmp(argv[i]+1, "par")) { _paramFile = argv[i+1]; i+=2; }
-      else if (!strcmp(argv[i]+1, "MC")) { _ComputeMC = 1; i++; }
+      else if (!strcmp(argv[i]+1, "MC"))  { _ComputeMC = 1; i++; }
       else if (!strcmp(argv[i]+1, "pos")) { _Pos = 1; i++; }
     }
     else
@@ -157,9 +159,11 @@ void Message::Warning(int level, const char *format, ...)
 void Message::Check()
 {
   Message::Info("Check param file...");
+  Message::Info("-- Global params --");
   Message::Info("Res directory: %s", _resDir.c_str());
   Message::Info("Compute MC: %s", _ComputeMC?"Yes":"No");
   Message::Info("Post-Processing: %s", _Pos?"Yes":"No");
+  Message::Info("-- Functions --");
   Message::Info("Number of function available: %d", _NFUN);
   for (int i =0; i<_NFUN; i++)
     {
@@ -167,6 +171,13 @@ void Message::Check()
       else  Message::Info("Function %d: No (setting MC[%d]=0)", i);
       Message::Info("MC[%d] desired=%d %s", i, _desired_MC[i], _ComputeMC?"":"(Useless)");
     }
+  Message::Info("-- Grid --");
+  Message::Info("xi_min: %g", _xi_min);
+  Message::Info("xi_max: %g", _xi_max);
+  Message::Info("dxi: %g", _dxi);
+  Message::Info("y_min: %g", _y_min);
+  Message::Info("y_max: %g", _y_max);
+  Message::Info("dy: %g", _dy);
 }
 
 //To quit properly like a boss
@@ -200,6 +211,10 @@ void Message::Parse()
 	{
 	  //remove spaces
 	  line.erase(remove_if(line.begin(), line.end(), isspace), line.end());
+	  //remove comment
+	  std::size_t found_comment = line.find("//");
+	  if(found_comment >= 0 && found_comment < line.size()) line = line.substr(0, found_comment);
+	  if(line.size() == 0) continue;
 	  //check for equal sign
 	  std::size_t found = line.find('=');
 	  if(found > line.size()) Message::Warning("This line is unreadable: %s", line.c_str());
@@ -212,6 +227,7 @@ void Message::Parse()
 		if(c_value[c_value.size()-1] == '/') _resDir = c_value;
 		else _resDir = c_value + "/";
 	      }
+	      //Check for functions, number of MC simulations...
 	      for (int i=0; i<_NFUN; i++)
 		{
 		  std::ostringstream oss;
@@ -222,11 +238,30 @@ void Message::Parse()
 		  if(keyword == mmc) { _desired_MC[i] = int_value;}
 		  if(keyword == func){ _FunChoice[i] = (int_value ==0 ?0:1);}
 		}
+	      //Check for the grid !
+	      if(keyword == "xi_min"){_xi_min = atof(c_value.c_str());}
+	      if(keyword == "xi_max"){_xi_max = atof(c_value.c_str());}
+	      if(keyword == "dxi"){ _dxi = atof(c_value.c_str());}
+	      if(keyword == "y_min"){ _y_min = atof(c_value.c_str());}
+	      if(keyword == "y_max"){ _y_max = atof(c_value.c_str());}
+	      if(keyword == "dy"){ _dy = atof(c_value.c_str());}
 	    }
 	}
       pfile.close();
       //last check to put MC = 0 if function is not choiced (security ?)
       for(int i =0; i< _NFUN; i++)
 	_desired_MC[i] = _desired_MC[i]*_FunChoice[i];
+      if(_xi_min > _xi_max) Message::Warning("_xi_min > _xi_max, are you nuts ?");
+      if(_y_min > _y_max) Message::Warning("_y_min > _y_max, are you nuts ?");
     }
+}
+
+void Message::DistributeWork(int nPointToDo, std::vector<int> *IndexOfPointToDo)
+{
+  //Given a number nPointToDo, it creates an array different for every MPI_Process. For example if there are 3 process...
+  // Rank 0 : 0, 3, 6, 9, ...
+  // Rank 1 : 1, 4, 7, 10, ...
+  // Rank 2 : 2, 5, 8, 11, ...
+  for (int i = _myRank; i < nPointToDo; i+=_nb_proc)
+    IndexOfPointToDo->push_back(i);
 }

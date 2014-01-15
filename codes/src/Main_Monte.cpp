@@ -14,7 +14,6 @@
 #include <time.h>
 #include <vector>
 
-
 /*#include<mpi.h>
   #include<omp.h>*/
 
@@ -25,41 +24,55 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-//initiatilization (reading arguments, launching MPI,...)
-Message::Initialize(argc, argv);
-//Reading which points have been done
-std::vector<Point*> PointDone;
-std::vector<Point*> PointToDo;
-Point::ReadAllPoints(&PointDone);
-if(Message::GetComputeMC) Point::CreatePointsToDo(&PointToDo, &PointDone);
+  //initiatilization (reading arguments, launching MPI,...)
+  Message::Initialize(argc, argv);
+  //Seed of rand function
+  srand(time(NULL) - 360000*Message::GetRank());
+  //Reading which points have been done
+  //MPI : decide who does what ...
+  std::vector<Point*> PointDone;
+  Point::ReadAllPoints(&PointDone);
+  
+  if(Message::GetComputeMC()) 
+    {
+      std::vector<Point*> PointToDo;
+      Point::CreatePointsToDo(&PointToDo, &PointDone);
+      int nPointToDo=PointToDo.size();
+      std::vector<int> IndexOfPointToDo; // in sequential, this will be 0:(nPointToDo-1)
+      Message::DistributeWork(nPointToDo, &IndexOfPointToDo);
+      for(int i =0; i < nPointToDo; i++)
+	{
+	  Point *cPoint = PointToDo[IndexOfPointToDo[i]];
+	  //Prepare folder, files,...
+	  cPoint->LaunchMC();
+	  //    For each MC simulations:
+	  //    -- Compute res
+	  //    -- Store on disk (resDir/idXX/res_aux file)
+	  //    //UNSURE IF I DON'T SPLIT EVERYTHING (SIMPLER)If(Message::GetPos) Then Also compute Average+Std Deviation and store everything
+	  //    Concatenate resDir/idXX/res_aux files
+	  //    Update DBB file for this point (resDir/dbb_aux)
+	}//  End Loop
+      // Backup resDir/ddb to resDir/ddb_backup($TIME)
+      //  Concatenate resDir/ddb_aux to resDir/ddb (whatever the order of id...)
+      //Delete Every points PointDone, and do PointDone = PointToDo
+    }//EndIf
+  
+  //compute (or only recompute) average+std deviation only
+  //If(Message::GetPos)
+  //   Loop on every Done Point
+  //   Read file + compute average + standard deviation and store results
+  //EndIf
 
-//MPI : decide who does what
-// If(Message::GetComputeMC) Then...
-//   Loop on every Point
-//     Compute the MC simulations
-//      Store on disk
-//     If(Message::GetPos) Then Also compute Average+Std Deviation and store everything
-//     Concatenate files (local to a point)
-//   End Loop
-//   Concatenate files (summary file)
-// EndIf
-
-//Weird stuff but possible: recompute average+std deviation only
-//If(Message::GetPos && !Message::GetComputeMC)
-//   Loop on every Done Point
-//   Read file + compute average + standard deviation and store results
-//EndIf
-
-//If (print)
-//  Build Geo File
-//  Compute Mesh (?) (system(GMSH...)
-//  Re-read mesh to get elements (parser...)
-//  Print Point on disk according to GMSH syntaxe and for every elements...
-//EndIf
-
-//Destroy PointDone and PointToDo
-//Exit smoothly
-Message::Finalize(EXIT_SUCCESS);
-return 0;
+  //If (print)
+  //  Build Geo File
+  //  Compute Mesh (?) (system(GMSH...)
+  //  Re-read mesh to get elements (parser...)
+  //  Print Point Done on disk according to GMSH syntaxe and for every elements...
+  //EndIf
+  
+  //Destroy PointDone and PointToDo
+  //Exit smoothly
+  Message::Finalize(EXIT_SUCCESS);
+  return 0;
 }
 

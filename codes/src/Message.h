@@ -18,7 +18,7 @@ class Message{
   //Parameters of simulations
   //---------------------------
   //function (number available, which one are choosen, ...)
-  static int _NFUN; //this is hard coded !
+  static const int _NFUN; //this is hard coded !
   static std::vector<int> _FunChoice; //choice of the functions to compute final result
   //User wanted values
   static std::vector<int> _desired_MC;
@@ -38,6 +38,8 @@ class Message{
   static double _T;
   static double _dt;
   static double _sdt;
+  //Grid dimension
+  static double _xi_min, _xi_max, _dxi, _y_min, _y_max, _dy;
  public:
   static void Initialize(int argc, char *argv[]);
   static void Info(int level, const char *format, ...);
@@ -45,11 +47,13 @@ class Message{
   static void Warning(const char *format, ...);
   static void Warning(int level, const char *format, ...);
   static int Precision(){return 17;} //set decimal precision for output file
-  static int GetCommRank(){return _myRank;};
+  static int GetRank(){return _myRank;};
   static int GetNProc(){return _nb_proc;};
   static int GetComputeMC(){return _ComputeMC;};
   static int GetPos(){return _Pos;};
   static int GetGmsh(){return _Gmsh;};
+  static int GetNFUN(){return _NFUN;};
+  static std::string GetResDir(){return _resDir;};
   static void Check();
   static void Parse();
   static void Finalize(int status);
@@ -67,6 +71,8 @@ class Message{
   static double GetT(){return _T;};
   static double GetDt(){return _dt;};
   static double GetSdt(){return _sdt;};
+  //MPI DISTRIBUTER
+  static void DistributeWork(int nPointToDo, std::vector<int> *IndexOfPointToDo);
 };
 
 #endif

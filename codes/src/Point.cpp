@@ -1,9 +1,10 @@
-#include<iostream>
-#include<fstream>
-#include<stdlib.h>
-#include<stdio.h>
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
+#include <stdio.h>
 #include <vector>
-#include<time.h>
+#include <time.h>
+#include <sstream> //for osstream
 
 #include "Message.h"
 #include "Point.h"
@@ -21,6 +22,103 @@ void Point::CreatePointsToDo(std::vector<Point*> *PointToDo, std::vector<Point*>
   // -- The given grid (param)
   // -- The already existing point (PointDone)
   //Destruction of the point must be achieved by the user !
+}
+
+void Point::LaunchMC()
+{
+  int MC_MAX = 0;
+  const int NFUN = Message::GetNFUN();
+  for (int i = 0 ; i < NFUN ; i ++)
+    MC_MAX = max(MC_MAX, _MC_to_do[i]);
+  Message::Info("[Proc %d] I will do %d MC tests on point %g %g", Message::GetRank(), MC_MAX, _xi, _y);
+  //Prepare Aux file
+  std::string auxFile[NFUN];
+  std::ofstream fRes[NFUN];
+  for (int i = 0; i < NFUN; i++)
+    {
+      std::ostringstream oss;
+      oss << i;
+      auxFile[i] = Message::GetResDir() + _IdDir + "res_aux" + oss.str();
+      fRes[i].open(auxFile[i].c_str()); // TO CHANGE!!!!!!!!!
+      if(!fRes[i].is_open()) Message::Warning("Problem opening file \"%s\"", auxFile[i].c_str()); // TO CHECK
+    }
+  //#pragma omp parallel for private(imc)
+  for (int imc = 0 ; imc < MC_MAX ; imc++)
+    {
+      std::vector<double> res_int;
+      ShortCyclePlus(&res_int);
+      //print on aux_files
+      for (int i = 0; i < NFUN; i++)
+	fRes[i] <<  res_int[i] << "\n";
+    }
+  for (int i = 0; i < NFUN; i++)
+    fRes[i].close();
+  //Concatenate auxilaries file
+  for (int i = 0 ; i < NFUN ; i++)
+    {
+      std::ostringstream oss;
+      oss << i;
+      std::string command, resFile;
+      resFile = Message::GetResDir() + _IdDir + "res" + oss.str();
+      command = "cat " + resFile + " "+ auxFile[i]; // TO CHECK
+      system(command.c_str());
+    }
+  Message::Info("[Proc %d] Finnished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, _xi, _y);
+}
+
+void Point::ShortCyclePlus(std::vector<double> *integrals)
+{
+  int NFUN = Message::GetNFUN();
+  integrals->resize(NFUN);
+  for(int i = 0; i < NFUN; i++)
+    (*integrals)[i] = 0.0;
+  //run a trajectory starting from (xi,y) \in DELTAPLUS of the solution on the boundary.
+  int cpt = 0;
+  double t = 0.;
+  double T = Message::GetT();
+  double dt = Message::GetDt();
+  double sdt = Message::GetSdt();
+  double ro = Message::GetRo();
+  double roc = Message::GetRoc();
+  double c0 = Message::GetC();
+  double k = Message::GetK();
+  double Y = Message::GetY();
+  double alpha = Message::GetAlpha();
+  double lambda = Message::GetLambda();
+  int it_max = T/dt;
+  double xi = _xi, y = _y;
+  for(int it = 0 ; it < it_max ; it++)
+    {
+      t += dt;
+      if(t > T){ t = T;}
+      //noise
+      double g1 = gauss();
+      double g2 = gauss();
+      double xi_aux = xi, y_aux = y;
+      xi += -alpha*xi_aux*dt + sdt*g1;
+      y  += -(alpha*xi_aux + c0*y_aux + k*Y)*dt + sdt*(ro*g1 + roc*g2);
+      //Compute integrals (Hard coded !)
+      for(int i=0; i < NFUN ; i++)
+	(*integrals)[i] += dt*exp(-lambda*t)*gplus(xi, y, i);
+      if (y<0)
+	{
+	  for (int i = 0; i < NFUN ; i++)
+	    (*integrals)[i] += exp(-lambda*t)*f(xi, i);
+	  break;
+	}
+    }
+  return;
+}
+
+double Point::gplus(double xi, double y, int i)
+{
+  if( i == 0) return f(xi, i)*f(y, i);
+  else return -1.;
+}
+
+double Point::f(double xi, int i){ 
+  if(i == 0) return exp(-xi*xi);
+  else return -1.;
 }
 
 
@@ -207,45 +305,5 @@ void Point::LaunchMC(char *traj_dir, int seed)
   */
 /*}
 
-
-
-void Point::ShortCyclePlus(std::vector<std::vector<double> > *trajectories)
-{
-  //run a trajectory starting from (xi,y) \in DELTAPLUS of the solution on the boundary.
-  double integ = 0.0;
-  int cpt = 0;
-  double t = 0.;
-  double T = Message::GetT();
-  double dt = Message::GetDt();
-  double sdt = Message::GetSdt();
-  double ro = Message::GetRo();
-  double roc = Message::GetRoc();
-  double c0 = Message::GetC();
-  double k = Message::GetK();
-  double Y = Message::GetY();
-  double alpha = Message::GetAlpha();
-  int it_max = T/dt;
-  double xi = _xi, y = _y;
-  (*trajectories).resize(it_max);
-  for(int it = 0 ; it < it_max ; it++)
-    {
-      (*trajectories)[it].resize(2);
-      t += dt;
-      if(t > T){ t = T;}
-      //noise
-      double g1 = gauss();
-      double g2 = gauss();
-      double xi_aux = xi, y_aux = y;
-      xi += -alpha*xi_aux*dt + sdt*g1;
-      y  += -(alpha*xi_aux + c0*y_aux + k*Y)*dt + sdt*(ro*g1 + roc*g2);
-      //Save value of (xi,y) for further computation
-      (*trajectories)[cpt][0]=xi;
-      (*trajectories)[cpt][1]=y;
-      cpt++;
-      if (y<0) 
-	break;
-    }
-  (*trajectories).resize(cpt);
-  return;
-}
 */
+

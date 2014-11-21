@@ -2,7 +2,7 @@
 #define _MESSAGE_H_
 
 #include <string>
-//#include "config.h"
+
 
 // a class to manage messages
 class Message{

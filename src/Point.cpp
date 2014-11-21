@@ -5,6 +5,7 @@
 #include <vector>
 #include <time.h>
 #include <sstream> //for osstream
+#include <algorithm>
 
 #include "Message.h"
 #include "Point.h"
@@ -32,8 +33,8 @@ void Point::LaunchMC()
     MC_MAX = max(MC_MAX, _MC_to_do[i]);
   Message::Info("[Proc %d] I will do %d MC tests on point %g %g", Message::GetRank(), MC_MAX, _xi, _y);
   //Prepare Aux file
-  std::string auxFile[NFUN];
-  std::ofstream fRes[NFUN];
+  std::vector<std::string> auxFile(NFUN);
+  std::vector<std::ofstream> fRes(NFUN);
   for (int i = 0; i < NFUN; i++)
     {
       std::ostringstream oss;

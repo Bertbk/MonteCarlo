@@ -2,7 +2,7 @@
 #define _MESSAGE_H_
 
 #include <string>
-#include "config.h"
+//#include "config.h"
 
 // a class to manage messages
 class Message{
@@ -52,7 +52,7 @@ class Message{
   static int GetComputeMC(){return _ComputeMC;};
   static int GetPos(){return _Pos;};
   static int GetGmsh(){return _Gmsh;};
-  static int GetNFUN(){return _NFUN;};
+  static const int GetNFUN(){return _NFUN;};
   static std::string GetResDir(){return _resDir;};
   static void Check();
   static void Parse();

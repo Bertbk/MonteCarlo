@@ -82,12 +82,9 @@ void Message::Initialize(int argc, char *argv[])
       else if (!strcmp(argv[i]+1, "par")) { _paramFile = argv[i+1]; i+=2; }
       else if (!strcmp(argv[i]+1, "MC"))  { _ComputeMC = 1; i++; }
       else if (!strcmp(argv[i]+1, "pos")) { _Pos = 1; i++; }
-    }
-    else
-      {
-	printf("What the hell is this option ?\n");
-	i++;
-      }
+	  else{ Warning("What the hell is this option (skipping) ? (%s)", argv[i] + 1); i++; }
+	}
+	else{ Warning("What the hell is this option (skipping) ? (%s)", argv[i]); i++; }
   }
   for(int i =0; i<_NFUN; i++)
     {

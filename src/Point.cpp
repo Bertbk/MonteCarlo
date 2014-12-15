@@ -34,14 +34,16 @@ void Point::LaunchMC()
   Message::Info("[Proc %d] I will do %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
   //Prepare Aux file
   std::vector<std::string> auxFile(NFUN);
-  std::vector<std::ofstream> fRes(NFUN);
+  std::vector<std::ofstream *> fRes(NFUN);
   for (int i = 0; i < NFUN; i++)
     {
+	  fRes[i] = new ofstream;
       std::ostringstream oss;
       oss << i;
       auxFile[i] = Message::GetResDir() + m_IdDir + "res_aux" + oss.str();
-      fRes[i].open(auxFile[i].c_str()); // TO CHANGE!!!!!!!!!
-      if(!fRes[i].is_open()) Message::Warning("Problem opening file \"%s\"", auxFile[i].c_str()); // TO CHECK
+//	  std::ofstream (*(fRes[i]))(auxFile[i].c_str());
+      fRes[i]->open(auxFile[i].c_str()); // TO CHANGE!!!!!!!!!
+      if(!fRes[i]->is_open()) Message::Warning("Problem opening file \"%s\"", auxFile[i].c_str()); // TO CHECK
     }
   //#pragma omp parallel for private(imc)
   for (int imc = 0 ; imc < MC_MAX ; imc++)
@@ -50,10 +52,10 @@ void Point::LaunchMC()
       ShortCyclePlus(&res_int);
       //print on aux_files
       for (int i = 0; i < NFUN; i++)
-	fRes[i] <<  res_int[i] << "\n";
+		*(fRes[i]) <<  res_int[i] << "\n";
     }
   for (int i = 0; i < NFUN; i++)
-    fRes[i].close();
+    fRes[i]->close();
   //Concatenate auxilaries file
   for (int i = 0 ; i < NFUN ; i++)
     {
@@ -65,6 +67,10 @@ void Point::LaunchMC()
       system(command.c_str());
     }
   Message::Info("[Proc %d] Finnished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
+
+  //Cleaning
+  for (int i = 0; i < NFUN; i++)
+	  delete fRes[i];
 }
 
 void Point::ShortCyclePlus(std::vector<double> *integrals)

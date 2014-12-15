@@ -75,22 +75,24 @@ void Message::Initialize(int argc, char *argv[])
 #endif
   int i = 1;
   bool doCheckOnly = 0;
+  bool showHelp = 1;
   while (i < argc) {
     if (argv[i][0] == '-') {
-      if (!strcmp(argv[i]+1, "check"))    { doCheckOnly = 1; i++;}
-      else if (!strcmp(argv[i]+1, "v"))   { m_verbosity = atof(argv[i+1]) ; i+=2 ; }
-      else if (!strcmp(argv[i]+1, "par")) { m_paramFile = argv[i+1]; i+=2; }
-      else if (!strcmp(argv[i]+1, "MC"))  { m_ComputeMC = 1; i++; }
-      else if (!strcmp(argv[i]+1, "pos")) { m_Pos = 1; i++; }
-	  else{ Warning("What the hell is this option (skipping) ? (%s)", argv[i] + 1); i++; }
+		if (!strcmp(argv[i] + 1, "check"))    { doCheckOnly = 1; i++; showHelp = 0; }
+		else if (!strcmp(argv[i] + 1, "v"))   { m_verbosity = atof(argv[i + 1]); i += 2; showHelp = 0; }
+		else if (!strcmp(argv[i] + 1, "par")) { m_paramFile = argv[i + 1]; i += 2; showHelp = 0; }
+		else if (!strcmp(argv[i] + 1, "MC"))  { m_ComputeMC = 1; i++; showHelp = 0; }
+		else if (!strcmp(argv[i] + 1, "pos")) { m_Pos = 1; i++; showHelp = 0; }
+		else{ Warning("What the hell is this option (skipping) ? (%s)", argv[i] + 1); i++; }
 	}
 	else{ Warning("What the hell is this option (skipping) ? (%s)", argv[i]); i++; }
   }
-  for(int i =0; i<m_NFUN; i++)
+  for(int i =0; i < m_NFUN; i++)
     {
       m_desired_MC[i] = 0;
       m_FunChoice[i] = 0;
     }
+  if (showHelp){ Message::Help(); Message::Finalize(EXIT_SUCCESS); };
   //Parse param file
   Message::Parse();
   //Print info
@@ -153,6 +155,21 @@ void Message::Warning(int level, const char *format, ...)
   fprintf(stdout, "%sWarning : %s%s\n", c0,str,c1);
 }
 
+
+// Show help of MonteCarlo (options, ...)
+void Message::Help()
+{
+	std::cout << "Monte Carlo simulator\n";
+	std::cout << "B. Thierry\n";
+	std::cout << "Options: \n";
+	std::cout << "  -par string         Select param file to parse (default = \"param\")\n";
+	std::cout << "  -check              Check param file (nothing else is done)\n";
+	std::cout << "  -v num              Set verbosity level (default = 4)\n";
+	std::cout << "  -MC                 Launch the Monte Carlo computations\n";
+	std::cout << "  -pos                Launch the Post Processing (can be used together with -MC or standalone)\n";
+}
+
+// Check the result of parsing the param file
 void Message::Check()
 {
   Message::Info("Check param file...");

@@ -57,6 +57,7 @@ class Message{
   static void Check();
   static void Parse();
   static void Finalize(int status);
+  static void Help();
   //=======================
   // PARAMETERS FUNCTIONS
   //=======================

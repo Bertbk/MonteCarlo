@@ -30,18 +30,20 @@ void Point::LaunchMC()
   int MC_MAX = 0;
   const int NFUN = Message::GetNFUN();
   for (int i = 0 ; i < NFUN ; i ++)
-    MC_MAX = max(MC_MAX, _MC_to_do[i]);
-  Message::Info("[Proc %d] I will do %d MC tests on point %g %g", Message::GetRank(), MC_MAX, _xi, _y);
+    MC_MAX = max(MC_MAX, m_MC_to_do[i]);
+  Message::Info("[Proc %d] I will do %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
   //Prepare Aux file
   std::vector<std::string> auxFile(NFUN);
-  std::vector<std::ofstream> fRes(NFUN);
+  std::vector<std::ofstream *> fRes(NFUN);
   for (int i = 0; i < NFUN; i++)
     {
+	  fRes[i] = new ofstream;
       std::ostringstream oss;
       oss << i;
-      auxFile[i] = Message::GetResDir() + _IdDir + "res_aux" + oss.str();
-      fRes[i].open(auxFile[i].c_str()); // TO CHANGE!!!!!!!!!
-      if(!fRes[i].is_open()) Message::Warning("Problem opening file \"%s\"", auxFile[i].c_str()); // TO CHECK
+      auxFile[i] = Message::GetResDir() + m_IdDir + "res_aux" + oss.str();
+//	  std::ofstream (*(fRes[i]))(auxFile[i].c_str());
+      fRes[i]->open(auxFile[i].c_str()); // TO CHANGE!!!!!!!!!
+      if(!fRes[i]->is_open()) Message::Warning("Problem opening file \"%s\"", auxFile[i].c_str()); // TO CHECK
     }
   //#pragma omp parallel for private(imc)
   for (int imc = 0 ; imc < MC_MAX ; imc++)
@@ -50,21 +52,25 @@ void Point::LaunchMC()
       ShortCyclePlus(&res_int);
       //print on aux_files
       for (int i = 0; i < NFUN; i++)
-	fRes[i] <<  res_int[i] << "\n";
+		*(fRes[i]) <<  res_int[i] << "\n";
     }
   for (int i = 0; i < NFUN; i++)
-    fRes[i].close();
+    fRes[i]->close();
   //Concatenate auxilaries file
   for (int i = 0 ; i < NFUN ; i++)
     {
       std::ostringstream oss;
       oss << i;
       std::string command, resFile;
-      resFile = Message::GetResDir() + _IdDir + "res" + oss.str();
+      resFile = Message::GetResDir() + m_IdDir + "res" + oss.str();
       command = "cat " + resFile + " "+ auxFile[i]; // TO CHECK
       system(command.c_str());
     }
-  Message::Info("[Proc %d] Finnished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, _xi, _y);
+  Message::Info("[Proc %d] Finnished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
+
+  //Cleaning
+  for (int i = 0; i < NFUN; i++)
+	  delete fRes[i];
 }
 
 void Point::ShortCyclePlus(std::vector<double> *integrals)
@@ -87,7 +93,7 @@ void Point::ShortCyclePlus(std::vector<double> *integrals)
   double alpha = Message::GetAlpha();
   double lambda = Message::GetLambda();
   int it_max = T/dt;
-  double xi = _xi, y = _y;
+  double xi = m_xi, y = m_y;
   for(int it = 0 ; it < it_max ; it++)
     {
       t += dt;
@@ -128,30 +134,30 @@ double Point::f(double xi, int i){
 //constructor
 Point::Point()
 {
-  _id = -1;
-  _xi = -1.;
-  _y = -1.;
-  _MC = -1;
-  _npoints ++;
+  m_id = -1;
+  m_xi = -1.;
+  m_y = -1.;
+  m_MC = -1;
+  m_npoints ++;
 }
 
 Point::Point(double xi, double y, int MC){
-  _id = -1;    
-  _xi = xi;
-  _y = y;
-  _MC = MC;
-  _npoints ++;
+  m_id = -1;    
+  m_xi = xi;
+  m_y = y;
+  m_MC = MC;
+  m_npoints ++;
 }
 
 Point::Point(int id, double xi, double y, int MC){
   if(id > 0)
-    _id = id;
+    m_id = id;
   else
-    _id = -1;    
-  _xi = xi;
-  _y = y;
-  _MC = MC;
-  _npoints ++;
+    m_id = -1;    
+  m_xi = xi;
+  m_y = y;
+  m_MC = MC;
+  m_npoints ++;
 }
 
 //Change parameters
@@ -160,8 +166,8 @@ void Point::Set(int id ,double xi, double y, int MC)
   if(_id != id)
     {
       if(_id != -1)
-	Message::Warning("[Point id %d] Change of id (?!) from %g to %g !", _id, _id, id);
-      _id = id;
+	Message::Warning("[Point id %d] Change of id (?!) from %g to %g !", m_id, m_id, id);
+      m_id = id;
     }
   Set(xi, y, MC);
 }
@@ -170,18 +176,18 @@ void Point::Set(double xi, double y, int MC)
 {
   if(_xi != xi)
     {
-      Message::Warning("[Id %d] xi-coordinate changes from %g to %g !", _id, _xi, xi);
-      _xi = xi;
+      Message::Warning("[Id %d] xi-coordinate changes from %g to %g !", m_id, m_xi, xi);
+      m_xi = xi;
     }
   if(_y != y)
     {
-      Message::Warning("[Id %d] y-coordinate changes from %g to %g !", _id, _y, y);
-      _y = y;
+      Message::Warning("[Id %d] y-coordinate changes from %g to %g !", m_id, m_y, y);
+      m_y = y;
     }
   if(_MC != MC)
     {
-      Message::Warning("[Id %d] MC changes from %d to %d !", _id, _MC, MC);
-      _MC = MC;
+      Message::Warning("[Id %d] MC changes from %d to %d !", m_id, m_MC, MC);
+      m_MC = MC;
     }
   return;
 }
@@ -193,16 +199,16 @@ void Point::Check()
   for (int i = 0; i < nres; i++)
     {
       double x=MyResults::GetX(i), y = MyResults::GetY(i);
-      if(_xi == x && _y == y)
+      if(_xi == x && m_y == y)
       {
 	int id = MyResults::GetId(i), MC = MyResults::GetMC(i);
-	int MC_to_do = _MC - MC;
+	int MC_to_do = m_MC - MC;
 	this->SetId(id);
 	if(MC_to_do <= 0)
 	  Message::Warning("[Id %d] Already exist with desired number of simulations", id);
 	else
-	  Message::Warning("[Id %d] Already exist, only %d simu to reach %d", id, MC_to_do, _MC);
-	this->Set(_xi, _y, MC_to_do);
+	  Message::Warning("[Id %d] Already exist, only %d simu to reach %d", id, MC_to_do, m_MC);
+	this->Set(_xi, m_y, MC_to_do);
       }
     }  
   if(_id == -1) //Set new id
@@ -214,7 +220,7 @@ void Point::Check()
 void Point::SetNewId()
 {
   int id = MyResults::GetNewId();
-  _id = id;
+  m_id = id;
   Message::Info(2,"New ID provided");
   return;
 }
@@ -223,7 +229,7 @@ void Point::SetNewId()
 void Point::PrepareMyFile(char *res_dir, int *file_id)
 {
   std::cout.precision(Message::Precision());
-  int id = _id;
+  int id = m_id;
   double xi=_xi, y=_y;
   char command[128], res_dir_loc[128];
   sprintf(res_dir_loc, "./%s/Id%d/", res_dir, id);
@@ -275,7 +281,7 @@ void Point::PrepareMyFile(char *res_dir, int *file_id)
 
 void Point::LaunchMC(char *traj_dir, int seed)
 {
-  Message::Info("[Proc %d] I will do %d MC tests on point %g %g", Message::GetCommRank(), _MC, _xi, _y);
+  Message::Info("[Proc %d] I will do %d MC tests on point %g %g", Message::GetCommRank(), m_MC, m_xi, m_y);
 
   /*
   //change seed
@@ -285,13 +291,13 @@ void Point::LaunchMC(char *traj_dir, int seed)
   int file_id;
   PrepareMyFile(traj_dir, &file_id);
   char traj_dir_loc[128], traj_file[128];
-  sprintf(traj_dir_loc, "./%s/Id%d/", traj_dir, _id);
+  sprintf(traj_dir_loc, "./%s/Id%d/", traj_dir, m_id);
   sprintf(traj_file, "%sres%d.mc", traj_dir_loc, file_id);
   std::ofstream fNewRes(traj_file);
   
   //#pragma omp parallel for private(imc)
-  myStr << "$MC\n"<< _MC << "\n";
-  for (int imc = 0 ; imc < _MC ; imc++)
+  myStr << "$MC\n"<< m_MC << "\n";
+  for (int imc = 0 ; imc < m_MC ; imc++)
     {
       Message::Info("%d",imc);
       std::vector<std::vector<double> > traj_imc;

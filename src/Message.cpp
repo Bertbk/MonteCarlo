@@ -23,38 +23,38 @@
 
 
 //using namespace std;
-int Message::_ComputeMC = 0;
-int Message::_Pos = 0;
-int Message::_Gmsh = 0;
-int Message::_verbosity = 4;
-int Message::_myRank = 0;
-int Message::_nb_proc = 1;
+int Message::m_ComputeMC = 0;
+int Message::m_Pos = 0;
+int Message::m_Gmsh = 0;
+int Message::m_verbosity = 4;
+int Message::m_myRank = 0;
+int Message::m_nb_proc = 1;
 //PARAMETERS
-//==========
-double Message::_deuxpi = 8*atan(1.0);
-double Message::_lambda = 0.1;
+//==============
+double Message::m_deuxpi = 8*atan(1.0);
+double Message::m_lambda = 0.1;
 //parameters of the oscillator
-double Message::_Y   = 1.0;
-double Message::_c0  = 1.0;
-double Message::_k   = 1.0;
+double Message::m_Y   = 1.0;
+double Message::m_c0  = 1.0;
+double Message::m_k   = 1.0;
 //filtre
-double Message::_alpha = 0.5;  
+double Message::m_alpha = 0.5;  
 //correlation of the noises between y and gamma (g)
-double Message::_ro = 0.1;
-double Message::_roc = sqrt(1.0 - _ro*_ro);
+double Message::m_ro = 0.1;
+double Message::m_roc = sqrt(1.0 - m_ro*m_ro);
 //parameters of the numerical procedure
-double Message::_T   = 500.0;
-double Message::_dt  = 0.0001;
-double Message::_sdt = sqrt(_dt);
+double Message::m_T   = 500.0;
+double Message::m_dt  = 0.0001;
+double Message::m_sdt = sqrt(m_dt);
 //Grid
-double Message::_xi_min=-5, Message::_xi_max=5, Message::_dxi = 0.1;
-double Message::_dy=0.1, Message::_y_min=0, Message::_y_max=5;
+double Message::m_xi_min=-5, Message::m_xi_max=5, Message::m_dxi = 0.1;
+double Message::m_dy=0.1, Message::m_y_min=0, Message::m_y_max=5;
 //choice of function (for final computation)
-const int Message::_NFUN = 4;
-std::vector<int> Message::_FunChoice(_NFUN);
-std::vector<int> Message::_desired_MC(_NFUN);
-std::string Message::_paramFile = "param";
-std::string Message::_resDir = "res/";
+const int Message::m_NFUN = 4;
+std::vector<int> Message::m_FunChoice(m_NFUN);
+std::vector<int> Message::m_desired_MC(m_NFUN);
+std::string Message::m_paramFile = "param";
+std::string Message::m_resDir = "res/";
 
 //Message
 //-------
@@ -75,30 +75,32 @@ void Message::Initialize(int argc, char *argv[])
 #endif
   int i = 1;
   bool doCheckOnly = 0;
+  bool showHelp = 1;
   while (i < argc) {
     if (argv[i][0] == '-') {
-      if (!strcmp(argv[i]+1, "check"))    { doCheckOnly = 1; i++;}
-      else if (!strcmp(argv[i]+1, "v"))   { _verbosity = atof(argv[i+1]) ; i+=2 ; }
-      else if (!strcmp(argv[i]+1, "par")) { _paramFile = argv[i+1]; i+=2; }
-      else if (!strcmp(argv[i]+1, "MC"))  { _ComputeMC = 1; i++; }
-      else if (!strcmp(argv[i]+1, "pos")) { _Pos = 1; i++; }
-	  else{ Warning("What the hell is this option (skipping) ? (%s)", argv[i] + 1); i++; }
+		if (!strcmp(argv[i] + 1, "check"))    { doCheckOnly = 1; i++; showHelp = 0; }
+		else if (!strcmp(argv[i] + 1, "v"))   { m_verbosity = atof(argv[i + 1]); i += 2; showHelp = 0; }
+		else if (!strcmp(argv[i] + 1, "par")) { m_paramFile = argv[i + 1]; i += 2; showHelp = 0; }
+		else if (!strcmp(argv[i] + 1, "MC"))  { m_ComputeMC = 1; i++; showHelp = 0; }
+		else if (!strcmp(argv[i] + 1, "pos")) { m_Pos = 1; i++; showHelp = 0; }
+		else{ Warning("What the hell is this option (skipping) ? (%s)", argv[i] + 1); i++; }
 	}
 	else{ Warning("What the hell is this option (skipping) ? (%s)", argv[i]); i++; }
   }
-  for(int i =0; i<_NFUN; i++)
+  for(int i =0; i < m_NFUN; i++)
     {
-      _desired_MC[i] = 0;
-      _FunChoice[i] = 0;
+      m_desired_MC[i] = 0;
+      m_FunChoice[i] = 0;
     }
+  if (showHelp){ Message::Help(); Message::Finalize(EXIT_SUCCESS); };
   //Parse param file
   Message::Parse();
   //Print info
   if(doCheckOnly) { Message::Check(); Message::Finalize(EXIT_SUCCESS);}
-  else {if (_verbosity > 0) Message::Check();}
+  else {if (m_verbosity > 0) Message::Check();}
 
   //Create result folder (if does not exist)
-  std::string command = "if ! test -d " + _resDir + "; then mkdir "+ _resDir+"; fi";
+  std::string command = "if ! test -d " + m_resDir + "; then mkdir "+ m_resDir+"; fi";
   system(command.c_str());
 }
 
@@ -117,7 +119,7 @@ void Message::Info(const char *format, ...)
 //with verbosity
 void Message::Info(int level, const char *format, ...)
 {
-  if(level > _verbosity) return;
+  if(level > m_verbosity) return;
   char str[1024];
   va_list args;
   va_start (args, format);
@@ -140,7 +142,7 @@ void Message::Warning(const char *format, ...)
 
 void Message::Warning(int level, const char *format, ...)
 {
-  if(level > _verbosity) return;
+  if(level > m_verbosity) return;
   char str[1024];
   va_list args;
   va_start (args, format);
@@ -153,28 +155,44 @@ void Message::Warning(int level, const char *format, ...)
   fprintf(stdout, "%sWarning : %s%s\n", c0,str,c1);
 }
 
+
+// Show help of MonteCarlo (options, ...)
+void Message::Help()
+{
+	std::cout << "Monte Carlo simulator\n";
+	std::cout << "B. Thierry\n";
+	std::cout << "Options: \n";
+	std::cout << "  -par string         Select param file to parse (default = \"param\")\n";
+	std::cout << "  -check              Check param file (nothing else is done)\n";
+	std::cout << "  -v num              Set verbosity level (default = 4)\n";
+	std::cout << "  -MC                 Launch the Monte Carlo computations\n";
+	std::cout << "  -pos                Launch the Post Processing (can be used together with -MC or standalone)\n";
+}
+
+// Check the result of parsing the param file
 void Message::Check()
 {
   Message::Info("Check param file...");
-  Message::Info("-- Global params --");
-  Message::Info("Res directory: %s", _resDir.c_str());
-  Message::Info("Compute MC: %s", _ComputeMC?"Yes":"No");
-  Message::Info("Post-Processing: %s", _Pos?"Yes":"No");
-  Message::Info("-- Functions --");
-  Message::Info("Number of function available: %d", _NFUN);
-  for (int i =0; i<_NFUN; i++)
+  Message::Info("========== Global params ==========");
+  Message::Info("Res directory  : %s", m_resDir.c_str());
+  Message::Info("Compute MC     : %s", m_ComputeMC?"Yes":"No");
+  Message::Info("Post-Processing: %s", m_Pos?"Yes":"No");
+  Message::Info("============ Functions ============");
+  Message::Info("Number of function available: %d", m_NFUN);
+  for (int i =0; i < m_NFUN; i++)
     {
-      if(_FunChoice[i])  Message::Info("Function %d: Yes", i);
-      else  Message::Info("Function %d: No (setting MC[%d]=0)", i);
-      Message::Info("MC[%d] desired=%d %s", i, _desired_MC[i], _ComputeMC?"":"(Useless)");
+      if(m_FunChoice[i])  Message::Info("Function %d: Yes", i);
+      else  Message::Info("Function %d: No (setting MC[%d]=0)", i, i);
+      Message::Info("MC[%d] desired=%d %s", i, m_desired_MC[i], m_ComputeMC?"":"(But not computation is asked)");
     }
-  Message::Info("-- Grid --");
-  Message::Info("xi_min: %g", _xi_min);
-  Message::Info("xi_max: %g", _xi_max);
-  Message::Info("dxi: %g", _dxi);
-  Message::Info("y_min: %g", _y_min);
-  Message::Info("y_max: %g", _y_max);
-  Message::Info("dy: %g", _dy);
+  Message::Info("=============== Grid ==============");
+  Message::Info("xi_min: %g", m_xi_min);
+  Message::Info("xi_max: %g", m_xi_max);
+  Message::Info("dxi   : %g", m_dxi);
+  Message::Info("y_min : %g", m_y_min);
+  Message::Info("y_max : %g", m_y_max);
+  Message::Info("dy    : %g", m_dy);
+  Message::Info("============ End Check ============");
 }
 
 //To quit properly like a boss
@@ -194,11 +212,11 @@ void Message::Finalize(int status)
 //Parse param file to find the parameters wanted by the user ^_^
 void Message::Parse()
 {
-  Message::Info("Parse param file \"%s\"...", _paramFile.c_str());
-  std::ifstream pfile(_paramFile.c_str());
+  Message::Info("Parse param file \"%s\"...", m_paramFile.c_str());
+  std::ifstream pfile(m_paramFile.c_str());
   if(!pfile.is_open())
     {
-      Message::Warning("Paramameters file \"%s\" not found, exiting badly", _paramFile.c_str());
+      Message::Warning("Paramameters file \"%s\" not found, exiting badly", m_paramFile.c_str());
       Message::Finalize(EXIT_FAILURE);
     }
   else
@@ -221,35 +239,35 @@ void Message::Parse()
 	      std::string c_value=line.substr(found+1, line.size()-found);
 	      //Check keyword
 	      if(keyword == "resDir"){//set the "/" at the end of the folder directory's name (or not)
-		if(c_value[c_value.size()-1] == '/') _resDir = c_value;
-		else _resDir = c_value + "/";
+		if(c_value[c_value.size()-1] == '/') m_resDir = c_value;
+		else m_resDir = c_value + "/";
 	      }
 	      //Check for functions, number of MC simulations...
-	      for (int i=0; i<_NFUN; i++)
+	      for (int i=0; i<m_NFUN; i++)
 		{
 		  std::ostringstream oss;
 		  oss << i;
 		  std::string mmc = "MC_" + oss.str();
 		  std::string func = "FUN_" + oss.str();
 		  int int_value = atoi(c_value.c_str());
-		  if(keyword == mmc) { _desired_MC[i] = int_value;}
-		  if(keyword == func){ _FunChoice[i] = (int_value ==0 ?0:1);}
+		  if(keyword == mmc) { m_desired_MC[i] = int_value;}
+		  if(keyword == func){ m_FunChoice[i] = (int_value ==0 ?0:1);}
 		}
 	      //Check for the grid !
-	      if(keyword == "xi_min"){_xi_min = atof(c_value.c_str());}
-	      if(keyword == "xi_max"){_xi_max = atof(c_value.c_str());}
-	      if(keyword == "dxi"){ _dxi = atof(c_value.c_str());}
-	      if(keyword == "y_min"){ _y_min = atof(c_value.c_str());}
-	      if(keyword == "y_max"){ _y_max = atof(c_value.c_str());}
-	      if(keyword == "dy"){ _dy = atof(c_value.c_str());}
+	      if(keyword == "xi_min"){m_xi_min = atof(c_value.c_str());}
+	      if(keyword == "xi_max"){m_xi_max = atof(c_value.c_str());}
+	      if(keyword == "dxi"){ m_dxi = atof(c_value.c_str());}
+	      if(keyword == "y_min"){ m_y_min = atof(c_value.c_str());}
+	      if(keyword == "y_max"){ m_y_max = atof(c_value.c_str());}
+	      if(keyword == "dy"){ m_dy = atof(c_value.c_str());}
 	    }
 	}
       pfile.close();
       //last check to put MC = 0 if function is not choiced (security ?)
-      for(int i =0; i< _NFUN; i++)
-	_desired_MC[i] = _desired_MC[i]*_FunChoice[i];
-      if(_xi_min > _xi_max) Message::Warning("_xi_min > _xi_max, are you nuts ?");
-      if(_y_min > _y_max) Message::Warning("_y_min > _y_max, are you nuts ?");
+      for(int i =0; i< m_NFUN; i++)
+	m_desired_MC[i] = m_desired_MC[i]*m_FunChoice[i];
+      if(m_xi_min > m_xi_max) Message::Warning("m_xi_min > m_xi_max, are you nuts ?");
+      if(m_y_min > m_y_max) Message::Warning("m_y_min > m_y_max, are you nuts ?");
     }
 }
 
@@ -259,6 +277,6 @@ void Message::DistributeWork(int nPointToDo, std::vector<int> *IndexOfPointToDo)
   // Rank 0 : 0, 3, 6, 9, ...
   // Rank 1 : 1, 4, 7, 10, ...
   // Rank 2 : 2, 5, 8, 11, ...
-  for (int i = _myRank; i < nPointToDo; i+=_nb_proc)
+  for (int i = m_myRank; i < nPointToDo; i+=m_nb_proc)
     IndexOfPointToDo->push_back(i);
 }

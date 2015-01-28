@@ -18,4 +18,5 @@ option(WITH_OMP "Compile with OpenMP" OFF)
 add_executable(MonteCarlo
 Message.cpp
 Point.cpp
+Database.cpp
 Main_Monte.cpp)

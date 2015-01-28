@@ -19,6 +19,7 @@
 
 #include "Message.h"
 #include "Point.h"
+#include "Database.h"
 
 using namespace std;
 
@@ -26,6 +27,10 @@ int main(int argc, char *argv[])
 {
   //initiatilization (reading arguments, launching MPI,...)
   Message::Initialize(argc, argv);
+  //Build database
+  Database Db(Message::GetResDir());
+  Db.Init();
+  Db.PrintPointsDone();
   //Seed of rand function
   srand(time(NULL) - 360000*Message::GetRank());
   //Reading which points have been done

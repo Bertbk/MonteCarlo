@@ -13,7 +13,7 @@ class Point{
   std::vector<int> m_MC; //number of simu already done (for each function)
   std::vector<int> m_MC_to_do; //number of simu to do (for each function)
  public:
-
+  Point(int id, double xi, double y);
   static void ReadAllPoints(std::vector<Point*> *PointDone);
   static void CreatePointsToDo(std::vector<Point*> *PointToDo, std::vector<Point*> *PointDone);
   //Monte Carlo simulations
@@ -24,6 +24,7 @@ class Point{
   static double gauss(){return sqrt(-2.*log(uniform()))*cos(Message::GetDeuxPi()*uniform());}
   static double f(double xi, int i);
   static double gplus(double xi, double y, int i);
+  void Print();
 
   /*  static int m_npoints;
   Point();

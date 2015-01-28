@@ -12,6 +12,22 @@
 
 using namespace std;
 
+//constructor
+Point::Point(int id, double xi, double y){
+  m_id = id;
+  m_xi = xi;
+  m_y = y;
+}
+
+void Point::Print()
+{
+  Message::Info("Printing point informations...");
+  Message::Info("id = %d", m_id);
+  Message::Info("xi = %g", m_xi);
+  Message::Info("y  = %g", m_y);
+}
+
+
 void Point::ReadAllPoints(std::vector<Point*> *PointDone)
 {
   //Read all folder and build the right Point
@@ -131,66 +147,6 @@ double Point::f(double xi, int i){
 
 /*
 
-//constructor
-Point::Point()
-{
-  m_id = -1;
-  m_xi = -1.;
-  m_y = -1.;
-  m_MC = -1;
-  m_npoints ++;
-}
-
-Point::Point(double xi, double y, int MC){
-  m_id = -1;    
-  m_xi = xi;
-  m_y = y;
-  m_MC = MC;
-  m_npoints ++;
-}
-
-Point::Point(int id, double xi, double y, int MC){
-  if(id > 0)
-    m_id = id;
-  else
-    m_id = -1;    
-  m_xi = xi;
-  m_y = y;
-  m_MC = MC;
-  m_npoints ++;
-}
-
-//Change parameters
-void Point::Set(int id ,double xi, double y, int MC)
-{
-  if(_id != id)
-    {
-      if(_id != -1)
-	Message::Warning("[Point id %d] Change of id (?!) from %g to %g !", m_id, m_id, id);
-      m_id = id;
-    }
-  Set(xi, y, MC);
-}
-//Change parameters
-void Point::Set(double xi, double y, int MC)
-{
-  if(_xi != xi)
-    {
-      Message::Warning("[Id %d] xi-coordinate changes from %g to %g !", m_id, m_xi, xi);
-      m_xi = xi;
-    }
-  if(_y != y)
-    {
-      Message::Warning("[Id %d] y-coordinate changes from %g to %g !", m_id, m_y, y);
-      m_y = y;
-    }
-  if(_MC != MC)
-    {
-      Message::Warning("[Id %d] MC changes from %d to %d !", m_id, m_MC, MC);
-      m_MC = MC;
-    }
-  return;
-}
 
 //Check if this point has already been done or not
 void Point::Check()

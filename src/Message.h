@@ -38,8 +38,12 @@ class Message{
   static double m_T;
   static double m_dt;
   static double m_sdt;
-  //Grid dimension
+  //Grid dimension and grid
   static double m_xi_min, m_xi_max, m_dxi, m_y_min, m_y_max, m_dy;
+  static std::vector<double> m_xi, m_y;
+
+  static void BuildGrid();
+
  public:
   static void Initialize(int argc, char *argv[]);
   static void Info(int level, const char *format, ...);
@@ -56,6 +60,9 @@ class Message{
   static int GetGmsh(){return m_Gmsh;};
   static const int GetNFUN(){return m_NFUN;};
   static std::string GetResDir(){return m_resDir;};
+  static std::vector<double>* GetGridXi(){return &m_xi;}
+  static std::vector<double>* GetGridY(){return &m_y;}
+  static std::vector<int>* GetDesiredMC(){return &m_desired_MC;}
   static void Check();
   static void Parse();
   static void Finalize(int status);

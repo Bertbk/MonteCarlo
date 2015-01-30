@@ -22,10 +22,10 @@ class Database {
   static std::string FunResRootName;
   static std::string PointFolderRootName;
   static std::string PointResRootName;
-  int Npoints, NpointsToDo, MaxId;
+  int NpointsToDo;
 
   //Parse the Root files: points.db, resfunXX.db, ...
-  void ParseRootFiles();
+  int ParseRootFiles();
   //loop on PointXX folder and parse the files and funXX folder...
   void ParsePointFiles();
 
@@ -38,7 +38,7 @@ class Database {
   //Init Database: read files, build PointsDone vector, ...
   void Init();
   //Provide an array of pointers to the Points to be treated by the MC solver
-  void UpdatePointsToDo(std::vector<double> X, std::vector<double> Y, std::vector<int> MC_To_Do);
+  void UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y, std::vector<int> *MC_To_Do);
   int FindPoint(double x, double y);
   Point* GetPointToDo(int index);
   //Print information on every points

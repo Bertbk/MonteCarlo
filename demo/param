@@ -13,5 +13,5 @@ xi_min = -5
 xi_max = 5
 y_max = 5
 y_min = 0
-dx = 0.1
-dy = 0.1
+dxi = 5
+dy = 5

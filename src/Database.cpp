@@ -20,15 +20,14 @@ std::string Database::PointResRootName = "point_res_";
 //Constructor
 Database::Database(std::string resdir){
   m_resDir = resdir;
-  Npoints = 0;
   NpointsToDo = 0;
   NResByFun.resize(Message::GetNFUN());
 }
 
 Database::~Database(){
-  for (int i = 0; i < Npoints; i++)
+  for (int i = 0; i < Points.size(); i++)
     delete Points[i];
-  for (int i = 0; i < NpointsToDo; i++)
+  for (int i = 0; i < PointsToDo.size(); i++)
     delete PointsToDo[i];
 }
 
@@ -42,13 +41,14 @@ void Database::Init()
 {
   Message::Info("Init Database...");
   //Read folder then subfolder, then ...
-  ParseRootFiles();
-  ParsePointFiles();
+  int DbExists = ParseRootFiles();
+  if(DbExists)
+    ParsePointFiles();
 
 }
 
 
-void Database::ParseRootFiles(){
+int Database::ParseRootFiles(){
   Message::Info("ParseRootFiles...");
   //The root directory should have a file points.db and N_FUN files res_funXX.db
   //points.db: contains information about the points (Id, X, Y)
@@ -57,16 +57,15 @@ void Database::ParseRootFiles(){
   if(!PointsDb.is_open())
     {
       Message::Warning("No database file found... I hope there is no work there because it's gonna be erazed by new results...");
-      Npoints = 0;
-      return;
+      return 0;
     }
   else
     {
       Message::Info("Database file found! Let's rock!");
       //      std::string line;
       //      getline(PointsDb, line);
+      int Npoints;
       PointsDb >> Npoints;
-      MaxId = Npoints;
       Points.resize(Npoints);
       for (int i = 0; i < Npoints; i++)
 	{
@@ -76,12 +75,13 @@ void Database::ParseRootFiles(){
 	  Points[i] = new Point(Id, xi, y);
 	}
       PointsDb.close();
+      return 1;
     }
 }
 
 void Database::ParsePointFiles(){
   Message::Info("ParsePointFiles...");
-  for (int iPoint = 0; iPoint < Npoints ; iPoint ++)
+  for (int iPoint = 0; iPoint < Points.size() ; iPoint ++)
     {
       std::stringstream iiPoint, backslash;
       backslash  << "/";
@@ -132,13 +132,16 @@ void Database::ParsePointFiles(){
 	    }
 	}
     }
+  Message::Info("End ParsePointFiles...");
 }
 
 
-void Database::UpdatePointsToDo(std::vector<double> Xi, std::vector<double> Y, std::vector<int> MCToDo){
-  int nxi = Xi.size();
-  int ny = Y.size();
-  int nmc = MCToDo.size();
+void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y, std::vector<int> *MCToDo){
+  Message::Info("UpdatePointsToDo...");
+  int nxi = Xi->size();
+  int ny = Y->size();
+  int nmc = MCToDo->size();
+  Message::Info("nxi = %d ny = %d MaxId = %d Npoints = %d", nxi, ny, Points.size(), Points.size());
 
   if(nxi != ny)
     {
@@ -149,29 +152,28 @@ void Database::UpdatePointsToDo(std::vector<double> Xi, std::vector<double> Y, s
   std::vector<int> newpointindex; //Save indices of points ...
   for (int i = 0; i < nxi; i++)
     {
-      double x = Xi[i];
-      double y = Y[i];
+      double xi = (*Xi)[i];
+      double y = (*Y)[i];
       //Find database id of the point
-      int id = FindPoint(x,y);
+      int id = FindPoint(xi,y);
       newpointindex.reserve(nxi);
-      if(id > -1)
-	PointsToDo[i] = Points[i];
+      if(id > -1){}
+	//	PointsToDo[i] = Points[i];
       else // build new point
 	{
-	  id = MaxId;
-	  PointsToDo[i] = new Point(id, x, y);
-	  newpointindex.push_back(id);
-	  MaxId ++;
+	  newpointindex.push_back(i);
 	}
     }
-  Points.resize(MaxId); //Adding new points...
+  int newId = Points.size();
+  Points.resize(Points.size() + newpointindex.size()); //Adding new points...
   for (int i =0 ;i < newpointindex.size(); i ++)
     {
-      int id = newpointindex[i];
-      Points[id] = new Point(id, Xi[i], Y[i]);
+      int ixi = newpointindex[i];
+      Message::Debug("newId = %d", newId);
+      Points[newId] = new Point(newId, (*Xi)[ixi], (*Y)[ixi]);
+      newId++;
       //Build folder
-      BuildFolderPoint(id);
-      Npoints++;
+      BuildFolderPoint(newId);
     }
   //Update points.db
   RebuildPointsDb();
@@ -198,9 +200,9 @@ void Database::BuildFolderPoint(int id)
 	  system(command_FunFolder.c_str());
 	  std::string FunFileName = PointFolder + FunResRootName + iifun.str() + DBext;
 	  std::ifstream FunDb(FunFileName.c_str(), std::ios_base::in);
-	  if(!FunDb.is_open())
+	  if(FunDb.is_open())
 	    {
-	      Message::Warning("BuildFolderPoint: %s already exists in %s!!!", FunFileName.c_str(), FunFolder.c_str());
+	      Message::Warning("BuildFolderPoint: %s already exists in %s!!!", FunFileName.c_str(), PointFolder.c_str());
 	      FunDb.close();
 	    }
 	  else{
@@ -215,19 +217,18 @@ void Database::BuildFolderPoint(int id)
 
 void Database::RebuildPointsDb()
 {
+  Message::Info("RebuildPointsDb...");
   //Backup file
   std::string backupcommand;
   backupcommand = "cp " + Message::GetResDir() + PointDatabase + DBext + Message::GetResDir() + PointDatabase + DBext + "BACKUP"; 
   system(backupcommand.c_str());
   //Open file: write (eraze)
   std::string PointsDbName = Message::GetResDir() + PointDatabase + DBext;
-  std::ofstream Pointsdb(PointsDbName.c_str(), std::ios_base::in);  
-  Pointsdb << Npoints << std::endl;
+  std::ofstream Pointsdb(PointsDbName.c_str(), std::ios_base::out);
+  Pointsdb << Points.size() << std::endl;
   //Write all points
-  for (int i = 0; i < MaxId; i ++)
-    {
-      Pointsdb << Points[i]->GetId() << Points[i]->GetXi() << Points[i]->GetY() << std::endl;      
-    }
+  for (int i = 0; i < Points.size(); i ++)
+      Pointsdb << Points[i]->GetId() << " " << Points[i]->GetXi() << " " << Points[i]->GetY() << std::endl;      
   Pointsdb.close();
   //Delete backup file
   backupcommand = "rm " + Message::GetResDir() + PointDatabase + DBext + "BACKUP"; 
@@ -235,12 +236,20 @@ void Database::RebuildPointsDb()
 }
 
 
-int Database::FindPoint(double x, double y)
+int Database::FindPoint(double xi, double y)
 {
+  for (int i = 0; i < Points.size(); i++)
+    {
+      double thisXi = Points[i]->GetXi();
+      double thisY = Points[i]->GetY();
+      if(thisXi == xi && thisY == y)
+	return Points[i]->GetId();
+    }
   return -1;
 }
 
 void Database::PrintPoints(){
-  for (int i = 0; i < Npoints; i++)
+  Message::Info("PrintPoints...");
+  for (int i = 0; i < Points.size(); i++)
     Points[i]->Print();
 }

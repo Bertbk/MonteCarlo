@@ -47,8 +47,10 @@ double Message::m_T   = 500.0;
 double Message::m_dt  = 0.0001;
 double Message::m_sdt = sqrt(m_dt);
 //Grid
-double Message::m_xi_min=-5, Message::m_xi_max=5, Message::m_dxi = 0.1;
-double Message::m_dy=0.1, Message::m_y_min=0, Message::m_y_max=5;
+double Message::m_xi_min=-5, Message::m_xi_max=5, Message::m_dxi = 5;
+double Message::m_y_min=0, Message::m_y_max=5, Message::m_dy=5;
+std::vector<double> Message::m_xi;
+std::vector<double> Message::m_y;
 //choice of function (for final computation)
 const int Message::m_NFUN = 4;
 std::vector<int> Message::m_FunChoice(m_NFUN);
@@ -98,6 +100,7 @@ void Message::Initialize(int argc, char *argv[])
   //Print info
   if(doCheckOnly) { Message::Check(); Message::Finalize(EXIT_SUCCESS);}
   else {if (m_verbosity > 0) Message::Check();}
+  Message::BuildGrid();
 
   //Create result folder (if does not exist)
   std::string command = "if ! test -d " + m_resDir + "; then mkdir "+ m_resDir+"; fi";
@@ -290,10 +293,28 @@ void Message::Parse()
 	}
       pfile.close();
       //last check to put MC = 0 if function is not choiced (security ?)
+      //???????????????????????????????????????????????????
       for(int i =0; i< m_NFUN; i++)
 	m_desired_MC[i] = m_desired_MC[i]*m_FunChoice[i];
       if(m_xi_min > m_xi_max) Message::Warning("m_xi_min > m_xi_max, are you nuts ?");
       if(m_y_min > m_y_max) Message::Warning("m_y_min > m_y_max, are you nuts ?");
+    }
+}
+
+void Message::BuildGrid()
+{
+  int nxi = ceil((m_xi_max - m_xi_min)/m_dxi) +1 ;
+  int ny = ceil((m_y_max - m_y_min)/m_dy) + 1;
+  int np = (nxi*ny);
+  m_xi.reserve(np);
+  m_y.reserve(np);
+  for (int j = 0; j < ny ; j++)
+    {
+      for (int i = 0; i < nxi ; i++)
+	{
+	  m_xi.push_back(m_xi_min + i*m_dxi);
+	  m_y.push_back(m_y_min + j*m_dy);
+	}
     }
 }
 

@@ -46,6 +46,8 @@ class Message{
   static void Info(const char *format, ...);
   static void Warning(const char *format, ...);
   static void Warning(int level, const char *format, ...);
+  static void Debug(int level, const char *format, ...);
+  static void Debug(const char *format, ...);
   static int Precision(){return 17;} //set decimal precision for output file
   static int GetRank(){return m_myRank;};
   static int GetNProc(){return m_nb_proc;};

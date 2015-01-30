@@ -12,10 +12,18 @@ class Point{
   double m_xi, m_y;
   std::vector<int> m_MC; //number of simu already done (for each function)
   std::vector<int> m_MC_to_do; //number of simu to do (for each function)
+  std::vector<int> m_NResFiles; //number of files already written (for each function)
+  std::vector<double> m_average, m_stddev; //current result in memory
  public:
   Point(int id, double xi, double y);
   static void ReadAllPoints(std::vector<Point*> *PointDone);
   static void CreatePointsToDo(std::vector<Point*> *PointToDo, std::vector<Point*> *PointDone);
+  // Set some values
+  void SetMCDone(int ifun, int MC){m_MC[ifun] = MC;}
+  void SetMC_to_do(int ifun, int MC_to_do){m_MC_to_do[ifun] = MC_to_do;}
+  void SetNResFiles(int ifun, int nfiles){m_NResFiles[ifun] = nfiles;}
+  void SetAverage(int ifun, int average){m_average[ifun] = average;}
+  void SetStdDev(int ifun, int stddev){m_stddev[ifun] = stddev;}
   //Monte Carlo simulations
   void LaunchMC();
   void ShortCyclePlus(std::vector<double> *integrals);

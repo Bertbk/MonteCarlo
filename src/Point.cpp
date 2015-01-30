@@ -17,6 +17,11 @@ Point::Point(int id, double xi, double y){
   m_id = id;
   m_xi = xi;
   m_y = y;
+  m_MC.resize(Message::GetNFUN());
+  m_MC_to_do.resize(Message::GetNFUN());
+  m_NResFiles.resize(Message::GetNFUN());
+  m_average.resize(Message::GetNFUN());
+  m_stddev.resize(Message::GetNFUN());
 }
 
 void Point::Print()

@@ -20,9 +20,17 @@ class Database {
   static std::string PointDatabase;
   static std::string FullResRootName;
   static std::string CurrentPointDatabase;
+  static std::string FunResFolderRootName;
   static std::string FunResRootName;
+  static std::string PointFolderRootName;
   static std::string PointResRootName;
   int NpointsDone, NpointsToDo, MaxId;
+
+  //Parse the Root files: points.db, resfunXX.db, ...
+  void ParseRootFiles();
+  //loop on PointXX folder and parse the files and funXX folder...
+  void ParsePointFiles();
+
  public:
   //Constructor
   Database(std::string resdir);
@@ -31,10 +39,6 @@ class Database {
   void Init();
 
   Point* GetPointToDo(int index);
-  //Parse the Root files: points.db, resfunXX.db, ...
-  void ParseRootFiles();
-  //loop on PointXX folder and parse the files and funXX folder...
-  void ParsePointFiles();
   //Print information on every points
   void PrintPointsDone();
 

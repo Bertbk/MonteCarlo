@@ -12,6 +12,8 @@ std::string Database::DBext = ".db";
 std::string Database::PointDatabase = "Points";
 std::string Database::FullResRootName = "ResFun";
 std::string Database::CurrentPointDatabase = "currentPoint";
+std::string Database::PointFolderRootName = "Point";
+std::string Database::FunResFolderRootName = "fun";
 std::string Database::FunResRootName = "fun";
 std::string Database::PointResRootName = "point_res_";
 
@@ -43,6 +45,7 @@ void Database::Init()
   StdDevByFun.resize(Message::GetNFUN());
   //Read folder then subfolder, then ...
   ParseRootFiles();
+  ParsePointFiles();
 
 }
 
@@ -117,8 +120,57 @@ void Database::ParseRootFiles(){
 
 void Database::ParsePointFiles(){
   Message::Info("ParsePointFiles...");
+  for (int iPoint = 0; iPoint < NpointsDone ; iPoint ++)
+    {
+      std::stringstream iiPoint, backslash;
+      backslash  << "/";
+      iiPoint << iPoint;
+      std::string PointFolder = Message::GetResDir() + PointFolderRootName + iiPoint.str() + backslash.str();
+      Message::Debug("PointFolder : %s", PointFolder.c_str());
+      //Create - if not exist - the foler file
+      std::string command_PointFolder = "if ! test -d " + PointFolder + "; then mkdir "+ PointFolder+"; fi";
+      system(command_PointFolder.c_str());
 
-
+      for (int ifun = 0; ifun < Message::GetNFUN() ; ifun ++)
+	{
+	  std::stringstream iifun;
+	  iifun << ifun;
+	  //Check if folder exists
+	  std::string FunFolder = PointFolder + FunResFolderRootName + iifun.str();
+	  std::string command_FunFolder = "if ! test -d " + FunFolder + "; then mkdir "+ FunFolder+"; fi";
+	  system(command_FunFolder.c_str());
+	  //Read summary file funXX.db
+	  std::string FunFileName = PointFolder + FunResRootName + iifun.str() + DBext;
+	  Message::Debug("FunFileName : %s", FunFileName.c_str());
+	  //Open file
+	  std::ifstream FunDb(FunFileName.c_str(), std::ios_base::in);
+	  if(!FunDb.is_open())
+	    {
+	      Message::Warning("No %s for Point %d and function %d found... Building empty file", FunResRootName.c_str(), iPoint, ifun);
+	      std::ofstream FunDbWrite(FunFileName.c_str(), std::ios_base::out);
+	      FunDbWrite << 0 << std::endl; // MC done (total)
+	      FunDbWrite << 0 << std::endl; // N files
+	      FunDbWrite << 0. << std::endl; // Average
+	      FunDbWrite << 0. << std::endl; // Std Dev
+	      FunDbWrite.close();
+	      FunDb.open(FunFileName.c_str(), std::ios_base::in);
+	    }
+	  else
+	    {
+	      //Read files
+	      int nresfiles, nMCDone;
+	      double aver, standddev;
+	      FunDb >> nresfiles;
+	      FunDb >> nMCDone;
+	      FunDb >> aver;
+	      FunDb >> standddev;
+	      PointsDone[iPoint]->SetNResFiles(ifun, nresfiles);
+	      PointsDone[iPoint]->SetMCDone(ifun, nMCDone);
+	      PointsDone[iPoint]->SetAverage(ifun, aver);
+	      PointsDone[iPoint]->SetStdDev(ifun, standddev);
+	    }
+	}
+    } 
 }
 
 void Database::PrintPointsDone(){

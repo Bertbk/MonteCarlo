@@ -155,6 +155,32 @@ void Message::Warning(int level, const char *format, ...)
   fprintf(stdout, "%sWarning : %s%s\n", c0,str,c1);
 }
 
+//Debug...
+void Message::Debug(const char *format, ...)
+{
+  char str[1024];
+  va_list args;
+  va_start (args, format);
+  vsnprintf (str, 1024, format, args);
+  va_end (args);
+  Debug(0, str);
+}
+
+void Message::Debug(int level, const char *format, ...)
+{
+  if(level > m_verbosity) return;
+  char str[1024];
+  va_list args;
+  va_start (args, format);
+  vsnprintf (str, 1024, format, args);
+  va_end (args);
+  //to write in bold (\33[1m) + red (\33[31m)
+  const char *c0 = "", *c1 = "";
+  c0 = "\33[1m\33[34m"; c1 = "\33[0m";
+  //
+  fprintf(stdout, "%sDebug   : %s%s\n", c0,str,c1);
+}
+
 
 // Show help of MonteCarlo (options, ...)
 void Message::Help()

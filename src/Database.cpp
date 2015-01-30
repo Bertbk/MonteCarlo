@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <string>
 
@@ -37,6 +38,9 @@ Point* Database::GetPointToDo(int index){
 void Database::Init()
 {
   Message::Info("Init Database...");
+  NResByFun.resize(Message::GetNFUN());
+  MeanByFun.resize(Message::GetNFUN());
+  StdDevByFun.resize(Message::GetNFUN());
   //Read folder then subfolder, then ...
   ParseRootFiles();
 
@@ -61,6 +65,7 @@ void Database::ParseRootFiles(){
       //      std::string line;
       //      getline(PointsDb, line);
       PointsDb >> NpointsDone;
+      MaxId = NpointsDone;
       PointsDone.resize(NpointsDone);
       for (int i = 0; i < NpointsDone; i++)
 	{
@@ -72,30 +77,51 @@ void Database::ParseRootFiles(){
       PointsDb.close();
     }
   //Now let's attack the other root files, containing the results obtained with differents functions
-  for (int ifun = 0; ifun < Message::GetNFUN(); i++)
+  for (int ifun = 0; ifun < Message::GetNFUN(); ifun++)
     {
-      std::string FunFileName = Message::GetResDir() + FullResRootName + DBext;
+      NResByFun[ifun].resize(MaxId, 0);
+      MeanByFun[ifun].resize(MaxId, 0.);
+      StdDevByFun[ifun].resize(MaxId, 0.);
+      std::stringstream ii;
+      ii << ifun;
+      std::string FunFileName = Message::GetResDir() + FullResRootName + ii.str()+ DBext;
       std::ifstream FunDb(FunFileName.c_str(), std::ios_base::in);
       if(!FunDb.is_open())
 	{
 	  Message::Warning("No database for function %d found... I hope there is no work there because it's gonna be erazed by new results...", ifun);
-	  return;
+	  continue;
 	}
       else
 	{
+	  //get the number of points treated for this function
 	  int Npoints;
-	  FunDb >> Npoints;
-	  for (int iP = 0; iP < Npoints, iP++)
+	  std::string line;
+	  if(getline (FunDb,line))
+	     Npoints = atoi(line.c_str());
+	  else
+	    Npoints = 0;
+	  for (int iP = 0; iP < Npoints; iP++)
 	    {
 	      //Read some results
+	      int id, nres;
+	      double x, y, average, stddev;
+	      FunDb >> id >> x >> y >> nres >> average >> stddev;
+	      NResByFun[ifun][id] = nres;
+	      MeanByFun[ifun][id] = average;
+	      StdDevByFun[ifun][id] = stddev;
 	    }
+	  FunDb.close();
 	}
     }
+}
+
+void Database::ParsePointFiles(){
+  Message::Info("ParsePointFiles...");
+
 
 }
 
 void Database::PrintPointsDone(){
   for (int i = 0; i < NpointsDone; i++)
     PointsDone[i]->Print();
-
 }

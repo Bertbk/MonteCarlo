@@ -11,6 +11,9 @@
 class Database {
  private:
   std::string m_resDir;
+  std::vector <std::vector < int > > NResByFun; // Number of results per function (per points)
+  std::vector <std::vector < double > > MeanByFun;// Average of the results (mean) per function (per points)
+  std::vector <std::vector < double > > StdDevByFun;// Standard deviation of the results per function (per points)
   std::vector <Point*> PointsDone;
   std::vector <Point*> PointsToDo;
   static std::string DBext;
@@ -19,7 +22,7 @@ class Database {
   static std::string CurrentPointDatabase;
   static std::string FunResRootName;
   static std::string PointResRootName;
-  int NpointsDone, NpointsToDo;
+  int NpointsDone, NpointsToDo, MaxId;
  public:
   //Constructor
   Database(std::string resdir);
@@ -28,7 +31,11 @@ class Database {
   void Init();
 
   Point* GetPointToDo(int index);
+  //Parse the Root files: points.db, resfunXX.db, ...
   void ParseRootFiles();
+  //loop on PointXX folder and parse the files and funXX folder...
+  void ParsePointFiles();
+  //Print information on every points
   void PrintPointsDone();
 
 };

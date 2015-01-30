@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
   std::vector<Point*> PointDone;
   Point::ReadAllPoints(&PointDone);
   
-  if(Message::GetComputeMC()) 
+  if(Message::GetComputeMC())
     {
       std::vector<Point*> PointToDo;
       Point::CreatePointsToDo(&PointToDo, &PointDone);

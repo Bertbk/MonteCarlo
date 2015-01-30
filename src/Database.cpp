@@ -80,7 +80,7 @@ void Database::ParseRootFiles(){
       PointsDb.close();
     }
   //Now let's attack the other root files, containing the results obtained with differents functions
-  for (int ifun = 0; ifun < Message::GetNFUN(); ifun++)
+  /*  for (int ifun = 0; ifun < Message::GetNFUN(); ifun++)
     {
       NResByFun[ifun].resize(MaxId, 0);
       MeanByFun[ifun].resize(MaxId, 0.);
@@ -115,7 +115,7 @@ void Database::ParseRootFiles(){
 	    }
 	  FunDb.close();
 	}
-    }
+	}*/
 }
 
 void Database::ParsePointFiles(){
@@ -150,8 +150,8 @@ void Database::ParsePointFiles(){
 	      std::ofstream FunDbWrite(FunFileName.c_str(), std::ios_base::out);
 	      FunDbWrite << 0 << std::endl; // MC done (total)
 	      FunDbWrite << 0 << std::endl; // N files
-	      FunDbWrite << 0. << std::endl; // Average
-	      FunDbWrite << 0. << std::endl; // Std Dev
+	      //	      FunDbWrite << 0. << std::endl; // Average
+	      // FunDbWrite << 0. << std::endl; // Std Dev
 	      FunDbWrite.close();
 	      FunDb.open(FunFileName.c_str(), std::ios_base::in);
 	    }
@@ -166,8 +166,8 @@ void Database::ParsePointFiles(){
 	      FunDb >> standddev;
 	      PointsDone[iPoint]->SetNResFiles(ifun, nresfiles);
 	      PointsDone[iPoint]->SetMCDone(ifun, nMCDone);
-	      PointsDone[iPoint]->SetAverage(ifun, aver);
-	      PointsDone[iPoint]->SetStdDev(ifun, standddev);
+	      //	      PointsDone[iPoint]->SetAverage(ifun, aver);
+	      //	      PointsDone[iPoint]->SetStdDev(ifun, standddev);
 	    }
 	}
     } 

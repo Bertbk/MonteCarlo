@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   //Build database
   Database Db(Message::GetResDir());
   Db.Init();
-  Db.PrintPointsDone();
+  Db.PrintPoints();
   //Seed of rand function
   srand(time(NULL) - 360000*Message::GetRank());
   //Reading which points have been done

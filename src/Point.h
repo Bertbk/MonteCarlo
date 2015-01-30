@@ -16,6 +16,7 @@ class Point{
   std::vector<double> m_average, m_stddev; //current result in memory
  public:
   Point(int id, double xi, double y);
+  Point(Point *p);
   static void ReadAllPoints(std::vector<Point*> *PointDone);
   static void CreatePointsToDo(std::vector<Point*> *PointToDo, std::vector<Point*> *PointDone);
   // Set some values
@@ -33,30 +34,17 @@ class Point{
   static double f(double xi, int i);
   static double gplus(double xi, double y, int i);
   void Print();
-
+  //Get functions
+  int GetId(){return m_id;}
+  double GetXi(){return m_xi;}
+  double GetY(){return m_y;}
+  int GetMC(int ifun){return m_MC[ifun];}
+  int GetMCToDo(int ifun){return m_MC_to_do[ifun];}
+  double GetAverage(int ifun){return m_average[ifun];}
+  double GetStdDev(int ifun){return m_stddev[ifun];}
+  int GetNResFiles(int ifun){return m_NResFiles[ifun];}
+  std::string GetIdDir(){return m_IdDir;}
   /*  static int m_npoints;
-  Point();
-  Point(double xi, double y, int MC);
-  Point(int id, double xi, double y, int MC);
-  int GetId(){return m_id;};
-  double GetXi(){return m_xi;};
-  double GetY(){return m_y;};
-  std::vector<int> GetMC(){return m_MC;};
-  int GetMC(int i){return m_MC[i];};
-  std::vector<int> GetMC_to_do(){return m_MC_to_do;};
-  int GetMC_to_do(int i){return m_MC_to_do[i];};
-  void GetValues(double *xi, double *y, int *MC_loc){(*xi)=_xi; (*y)=_y; (*MC_loc)=_MC;};
-  void GetValues(int *id, double *xi, double *y, int *MC_loc){(*id)=_id; GetValues(xi,y,MC_loc);};
-  //set stuffs
-  void SetId(int id){_id = id;};
-  void Set(int id, double xi, double y, int n);
-  void Set(double xi, double y, int n);
-  //Check point
-  void Check(void);
-  //set new id
-  void SetNewId(void);
-  //check next file name available
-  void PrepareMyFile(char *res_dir, int *file_id);
   //=========================
   //TRAJECTORIES COMPUTATION
   //=========================

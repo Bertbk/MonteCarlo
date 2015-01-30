@@ -24,6 +24,28 @@ Point::Point(int id, double xi, double y){
   m_stddev.resize(Message::GetNFUN());
 }
 
+Point::Point(Point *p){
+  m_IdDir = p->GetIdDir();
+  m_id = p->GetId();
+  m_xi = p->GetXi();
+  m_y = p->GetY();
+  m_MC.resize(Message::GetNFUN());
+  m_MC_to_do.resize(Message::GetNFUN());
+  m_NResFiles.resize(Message::GetNFUN());
+  m_average.resize(Message::GetNFUN());
+  m_stddev.resize(Message::GetNFUN());
+
+  for(int i = 0; i < Message::GetNFUN(); i++)
+    {
+      m_MC[i]       = p->GetMC(i);
+      m_MC_to_do[i] = p->GetMCToDo(i);
+      m_NResFiles[i]= p->GetNResFiles(i);
+      m_average[i]  = p->GetAverage(i);
+      m_stddev[i]   = p->GetStdDev(i);
+    }
+}
+
+
 void Point::Print()
 {
   Message::Info("Printing point informations...");

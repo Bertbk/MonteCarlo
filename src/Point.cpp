@@ -45,6 +45,18 @@ Point::Point(Point *p){
     }
 }
 
+void Point::SetMCToDo(std::vector<int> *desired_MC)
+{
+  for (int ifun = 0; ifun < Message::GetNFUN(); ifun ++)
+    {
+      if((*desired_MC)[ifun] - m_MC[ifun] > 0)
+	m_MC_to_do[ifun] = (*desired_MC)[ifun] - m_MC[ifun];
+      else
+	m_MC_to_do[ifun] = 0;
+      Message::Debug("SetMCToDo, Point Id %d, ifun = %d, MC done= %d, MC desired = %d, MC to do = %d", m_id, ifun, m_MC[ifun], (*desired_MC)[ifun], m_MC_to_do[ifun]);
+    }  
+}
+
 
 void Point::Print()
 {

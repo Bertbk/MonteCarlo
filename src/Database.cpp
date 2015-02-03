@@ -21,7 +21,7 @@ std::string Database::PointResRootName = "point_res_";
 Database::Database(std::string resdir){
   m_resDir = resdir;
   NpointsToDo = 0;
-  NResByFun.resize(Message::GetNFUN());
+  //  NResByFun.resize(Message::GetNFUN());
 }
 
 Database::~Database(){
@@ -29,12 +29,6 @@ Database::~Database(){
     delete Points[i];
   for (int i = 0; i < PointsToDo.size(); i++)
     delete PointsToDo[i];
-}
-
-
-Point* Database::GetPointToDo(int index){
-  //Does this work ?
-  return PointsToDo[index];
 }
 
 void Database::Init()
@@ -87,7 +81,6 @@ void Database::ParsePointFiles(){
       backslash  << "/";
       iiPoint << iPoint;
       std::string PointFolder = Message::GetResDir() + PointFolderRootName + iiPoint.str() + backslash.str();
-      Message::Debug("PointFolder : %s", PointFolder.c_str());
       //Create - if not exist - the foler file
       std::string command_PointFolder = "if ! test -d " + PointFolder + "; then mkdir "+ PointFolder+"; fi";
       system(command_PointFolder.c_str());
@@ -102,7 +95,6 @@ void Database::ParsePointFiles(){
 	  system(command_FunFolder.c_str());
 	  //Read summary file funXX.db
 	  std::string FunFileName = PointFolder + FunResRootName + iifun.str() + DBext;
-	  Message::Debug("FunFileName : %s", FunFileName.c_str());
 	  //Open file
 	  std::ifstream FunDb(FunFileName.c_str(), std::ios_base::in);
 	  if(!FunDb.is_open())
@@ -111,8 +103,6 @@ void Database::ParsePointFiles(){
 	      std::ofstream FunDbWrite(FunFileName.c_str(), std::ios_base::out);
 	      FunDbWrite << 0 << std::endl; // MC done (total)
 	      FunDbWrite << 0 << std::endl; // N files
-	      //	      FunDbWrite << 0. << std::endl; // Average
-	      // FunDbWrite << 0. << std::endl; // Std Dev
 	      FunDbWrite.close();
 	      FunDb.open(FunFileName.c_str(), std::ios_base::in);
 	    }
@@ -127,8 +117,6 @@ void Database::ParsePointFiles(){
 	      FunDb >> standddev;
 	      Points[iPoint]->SetNResFiles(ifun, nresfiles);
 	      Points[iPoint]->SetMCDone(ifun, nMCDone);
-	      //	      Points[iPoint]->SetAverage(ifun, aver);
-	      //	      Points[iPoint]->SetStdDev(ifun, standddev);
 	    }
 	}
     }
@@ -148,7 +136,7 @@ void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y,
       Message::Warning("Vector Xi and Y not of the same size ! Abording...");
       Message::Finalize(EXIT_FAILURE);
     }
-  PointsToDo.resize(nxi);
+  PointsIdToDo.reserve(nxi);
   std::vector<int> newpointindex; //Save indices of points ...
   for (int i = 0; i < nxi; i++)
     {
@@ -157,28 +145,35 @@ void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y,
       //Find database id of the point
       int id = FindPoint(xi,y);
       newpointindex.reserve(nxi);
-      if(id > -1){}
-	//	PointsToDo[i] = Points[i];
+      if(id > -1)
+	{
+	PointsIdToDo.push_back(i);
+	Message::Info("Adding Id %d to PointsIdToDo", i);
+	}
       else // build new point
 	{
+	  //They will be created and added below, after the loop
 	  newpointindex.push_back(i);
 	}
     }
   int newId = Points.size();
   Points.resize(Points.size() + newpointindex.size()); //Adding new points...
-  for (int i =0 ;i < newpointindex.size(); i ++)
+  if(newpointindex.size()>0)
     {
-      int ixi = newpointindex[i];
-      Message::Debug("newId = %d", newId);
-      Points[newId] = new Point(newId, (*Xi)[ixi], (*Y)[ixi]);
-      newId++;
-      //Build folder
-      BuildFolderPoint(newId);
+      Message::Info("Creating new folders and rebuilding the Database Points.db");
+      for (int i =0 ;i < newpointindex.size(); i ++)
+	{
+	  int ixi = newpointindex[i];
+	  Points[newId] = new Point(newId, (*Xi)[ixi], (*Y)[ixi]);
+	  PointsIdToDo.push_back(newId);
+	  newId++;
+	  //Build folder
+	  BuildFolderPoint(newId);
+	}
+      //Update points.db
+      RebuildPointsDb();
     }
-  //Update points.db
-  RebuildPointsDb();
-  //Now compare the MC to do/ already done
-  
+  PreparePointsToDo();
 }
 
 void Database::BuildFolderPoint(int id)
@@ -234,6 +229,20 @@ void Database::RebuildPointsDb()
   backupcommand = "rm " + Message::GetResDir() + PointDatabase + DBext + "BACKUP"; 
   system(backupcommand.c_str());
 }
+
+void Database::PreparePointsToDo()
+{
+  Message::Info("PreparePointsToDo...");
+  int npToDo = PointsIdToDo.size();
+  std::vector<int> *desiredMC = Message::GetDesiredMC();
+  for (int iP =0 ; iP < npToDo; iP++)
+    {
+      int id = PointsIdToDo[iP];
+      Point *myP = Points[id];
+      myP->SetMCToDo(desiredMC);
+    }
+}
+
 
 
 int Database::FindPoint(double xi, double y)

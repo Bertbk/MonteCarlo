@@ -11,9 +11,10 @@
 class Database {
  private:
   std::string m_resDir;
-  std::vector <std::vector < int > > NResByFun; // Number of results per function (per points)
+  //  std::vector <std::vector < int > > NResByFun; // Number of results per function (per points)
   std::vector <Point*> Points;
   std::vector <Point*> PointsToDo;
+  std::vector <int>    PointsIdToDo; // Id of the points to do
   static std::string DBext;
   static std::string PointDatabase;
   static std::string FullResRootName;
@@ -31,6 +32,8 @@ class Database {
 
   void BuildFolderPoint(int id); // Create a folder for the point with empty files
   void RebuildPointsDb(); // Rebuild points.db
+  void PreparePointsToDo(); // For each points of id in "PointsIdToDo", compute the number of MC to do
+
  public:
   //Constructor
   Database(std::string resdir);
@@ -40,7 +43,8 @@ class Database {
   //Provide an array of pointers to the Points to be treated by the MC solver
   void UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y, std::vector<int> *MC_To_Do);
   int FindPoint(double x, double y);
-  Point* GetPointToDo(int index);
+  Point* GetPointToDo(int index){return Points[PointsIdToDo[index]];}
+  Point* GetPoint(int id){return Points[id];}
   //Print information on every points
   void PrintPoints();
 

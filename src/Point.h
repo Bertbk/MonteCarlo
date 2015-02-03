@@ -26,6 +26,7 @@ class Point{
   void SetAverage(int ifun, int average){m_average[ifun] = average;}
   void SetStdDev(int ifun, int stddev){m_stddev[ifun] = stddev;}
   //Monte Carlo simulations
+  void SetMCToDo(std::vector<int> *desired_MC); // Set the right MC_to_do, by comparing (differencing) m_MC and m_Desired_MC...
   void LaunchMC();
   void ShortCyclePlus(std::vector<double> *integrals);
   //double uniform(){return (1+2)/(1+(double)RAND_MAX);   }

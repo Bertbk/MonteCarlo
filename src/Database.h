@@ -13,7 +13,6 @@ class Database {
   std::string m_resDir;
   //  std::vector <std::vector < int > > NResByFun; // Number of results per function (per points)
   std::vector <Point*> Points;
-  std::vector <Point*> PointsToDo;
   std::vector <int>    PointsIdToDo; // Id of the points to do
   static std::string DBext;
   static std::string POSext;
@@ -31,12 +30,14 @@ class Database {
   int ParseRootFiles();
   //loop on PointXX folder and parse the files and funXX folder...
   void ParsePointFiles();
+  void ParsePosFiles();
 
   void BuildFolderPoint(int id); // Create a folder for the point with empty files
   void RebuildPointsDb(); // Rebuild points.db
   void PreparePointsToDo(); // For each points of id in "PointsIdToDo", compute the number of MC to do
   void CheckOrBuildRootFolder(); // Create res folder and basics help files (if not exist)
-
+  void Isend(int emitter, int receiver);
+  void Irecv(int emitter, int receiver);
  public:
   //Constructor
   Database(std::string resdir);

@@ -43,9 +43,9 @@ int main(int argc, char *argv[])
   if(Message::GetPos())
     {
       Db.PostProcessing(); // write file funXX.pos on root folder
-      if(Message::GetGmsh())
-	  Db.PostProcessingGMSH(); // write .geo and .pos files (need GMSH)
     }
+  if(Message::GetGmsh())
+    Db.PostProcessingGMSH(); // write .geo and .pos files (need GMSH)
 
   //Exit smoothly like a boss
   Message::Finalize(EXIT_SUCCESS);

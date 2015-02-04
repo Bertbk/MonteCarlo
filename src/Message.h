@@ -99,6 +99,7 @@ class Message{
   static double GetSdt(){return m_sdt;};
   //MPI DISTRIBUTER
   static void DistributeWork(int nPointToDo, std::vector<int> *IndexOfPointToDo);
+  static void DistributeWork(int N, std::vector<int> *iStart, std::vector<int> *iEnd);
   //========================
   // FILE/FOLDER NAMES...
   //========================

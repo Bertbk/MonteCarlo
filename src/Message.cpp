@@ -338,3 +338,28 @@ void Message::DistributeWork(int nPointToDo, std::vector<int> *IndexOfPointToDo)
   for (int i = m_myRank; i < nPointToDo; i+=m_nb_proc)
     IndexOfPointToDo->push_back(i);
 }
+
+void Message::DistributeWork(int N, std::vector<int> *iStart, std::vector<int> *iEnd)
+{
+  //Given a number N, it creates two arrays :
+  // iStart[myRank] = Starting index
+  // iEnd[myRank] = Ending index (not comprise)
+  // for (int i = iStart[myRank]; i < iEnd[myRank]; i++)
+  //   ...
+  iStart->resize(m_nb_proc);
+  iEnd->resize(m_nb_proc);
+  int step = N/m_nb_proc;
+  int reste = N % m_nb_proc;
+  (*iStart)[0] = 0;
+  (*iEnd)[0] = step;
+  if(reste > 0)
+    (*iEnd)[0]++;
+  for (int i = 1; i < m_nb_proc ; i++)
+    {
+      (*iStart)[i] = (*iEnd)[i-1];
+      (*iEnd)[i] = (*iStart)[i] + step;
+      if(i<reste)
+	(*iEnd)[i] ++;
+    }
+}
+

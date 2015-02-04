@@ -10,6 +10,9 @@
 #include "Message.h"
 #include "Point.h"
 
+#ifdef HAVE_MPI
+#include<mpi.h>
+#endif
 using namespace std;
 
 
@@ -102,9 +105,9 @@ void Point::LaunchMC()
   const int NFUN = Message::GetNFUN();
   for (int ifun = 0 ; ifun < NFUN ; ifun ++)
     MC_MAX = std::max(MC_MAX, m_MC_to_do[ifun]);
-  Message::Info("[Proc %d] I will do %d MC tests on point with id %d and (xi,y) = (%g, %g)", Message::GetRank(), MC_MAX, m_id, m_xi, m_y);
   if(MC_MAX <= 0)
     return;
+  Message::Info("[Proc %d] I will do %d MC tests on point with id %d and (xi,y) = (%g, %g)", Message::GetRank(), MC_MAX, m_id, m_xi, m_y);
   //Prepare Res file
   //Restart is a parameter that forces the program to print on files every time 
   //a number of Restart computations have been done. 
@@ -287,6 +290,7 @@ void Point::PostProcessing(int ifun)
   results.reserve(m_MC[ifun]);
   int nfiles = m_NResFiles[ifun];
   //loop on every files of funXX and this point
+  //This loop should be parallelizable... (OPENMP)
   for (int ifile = 0; ifile < nfiles ; ifile ++)
     {
       std::stringstream iifile;
@@ -315,3 +319,48 @@ void Point::PostProcessing(int ifun)
   m_average[ifun] = average;
   m_stddev[ifun] = stddev;
 }
+
+void Point::Broadcast(int emitter)
+{
+#ifdef HAVE_MPI
+  MPI_Bcast(&m_MC[0], m_MC.size(), MPI_INT, emitter, MPI_COMM_WORLD);
+  MPI_Bcast(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, emitter, MPI_COMM_WORLD);
+  MPI_Bcast(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, emitter, MPI_COMM_WORLD);
+  MPI_Bcast(&m_average[0], m_average.size(), MPI_DOUBLE, emitter, MPI_COMM_WORLD);
+  MPI_Bcast(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, emitter, MPI_COMM_WORLD);
+#endif
+}
+
+#ifdef HAVE_MPI
+void Point::Isend(int receiver, std::vector<MPI_Request> *request)
+{
+  const int NQuantities = 5;
+  std::vector<int> Tag(NQuantities);
+  for (int i = 0; i < NQuantities; i++)
+    Tag[i] = m_id*100 + i;
+  int cpt = request.size();
+  request->resize(request->size() + NQuantities);
+  MPI_Isend(&m_MC[0], m_MC.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+  MPI_Isend(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+  MPI_Isend(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+  MPI_Isend(&m_average[0], m_average.size(), MPI_DOUBLE, receiver, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+  MPI_Isend(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, receiver, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+}
+#endif
+
+#ifdef HAVE_MPI
+void Point::Irecv(int emitter)
+{
+  const int NQuantities = 5;
+  std::vector<int> Tag(NQuantities);
+  for (int i = 0; i < NQuantities; i++)
+    Tag[i] = m_id*100 + i;
+  int cpt = request.size();
+  request->resize(request->size() + NQuantities);
+  MPI_Irecv(&m_MC[0], m_MC.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+  MPI_Irecv(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+  MPI_Irecv(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+  MPI_Irecv(&m_average[0], m_average.size(), MPI_DOUBLE, emitter, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+  MPI_Irecv(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, emitter, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+}
+#endif

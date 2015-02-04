@@ -52,6 +52,12 @@ class Point{
   static double f(double xi, int i);
   static double gplus(double xi, double y, int i);
   void Print();
+  void Broadcast(int emitter); // receive information from emitter (mpi rank)
+#ifdef HAVE_MPI
+  void Isend(int receiver, std::vector<MPI_Request> *request);
+  void Irecv(int emitter, std::vector<MPI_Request> *request);
+#endif
+
   //Get functions
   int GetId(){return m_id;}
   double GetXi(){return m_xi;}

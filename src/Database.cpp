@@ -28,8 +28,6 @@ Database::Database(std::string resdir){
 Database::~Database(){
   for (int i = 0; i < Points.size(); i++)
     delete Points[i];
-  for (int i = 0; i < PointsToDo.size(); i++)
-    delete PointsToDo[i];
 }
 
 void Database::Init()
@@ -39,7 +37,10 @@ void Database::Init()
   //Read folder then subfolder, then ...
   int DbExists = ParseRootFiles();
   if(DbExists)
-    ParsePointFiles();
+    {
+      ParsePointFiles();
+      ParsePosFiles();
+    }
 }
 
 void Database::CheckOrBuildRootFolder()
@@ -123,6 +124,10 @@ int Database::ParseRootFiles(){
       PointsDb.close();
       return 1;
     }
+}
+
+void Database::ParsePosFiles(){
+
 }
 
 void Database::ParsePointFiles(){
@@ -312,11 +317,25 @@ void Database::LaunchMCSimulations()
 {
   Message::Info("LaunchMCSimulations...");
   int npToDo = PointsIdToDo.size();
-  for (int iP =0 ; iP < npToDo; iP++)
+  int myRank = Message::GetRank();
+  std::vector<int> iP_start, iP_end;
+  Message::DistributeWork(npToDo, &iP_start, &iP_end);
+    for (int iP = iP_start[myRank] ; iP < iP_end[myRank]; iP++)
     {
       int id = PointsIdToDo[iP];
       Points[id]->LaunchMC();
     }
+#ifdef HAVE_MPI
+  int nMpi = Message::GetNProc();
+  for (int iRank = 0 ; iRank < nMpi; iRank++)
+    {
+      for (int iP = iP_start[iRank] ; iP < iP_end[iRank]; iP++)
+	{
+	  int id = PointsIdToDo[iP];
+	  Points[id]->Broadcast(iRank);
+	}
+    }
+#endif
 }
 
 
@@ -334,6 +353,7 @@ void Database::PostProcessing(){
       std::stringstream iifun;
       iifun << ifun;
       std::string rootFunFolder = FunResFolderRootName + iifun.str() + BackSlash;
+      //This loop is parallelizable (MPI)
       for (int iP = 0; iP < Points.size(); iP++)
 	  Points[iP]->PostProcessing(ifun);
       //Write on files !
@@ -349,5 +369,9 @@ void Database::PostProcessing(){
 
 void Database::PostProcessingGMSH()
 {
-
+  //Rebuild Database to be sure to have the last informations
+  
+  
+  
+  
 }

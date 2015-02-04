@@ -22,6 +22,7 @@ class Message{
   static std::vector<int> m_FunChoice; //choice of the functions to compute final result
   //User wanted values
   static std::vector<int> m_desired_MC;
+  static int m_restart; // At every restart results, then write on file
   //constants
   static double m_deuxpi;
   static double m_lambda;
@@ -67,6 +68,7 @@ class Message{
   static int GetRank(){return m_myRank;};
   static int GetNProc(){return m_nb_proc;};
   static int GetComputeMC(){return m_ComputeMC;};
+  static int GetRestart(){return m_restart;};
   static int GetPos(){return m_Pos;};
   static int GetGmsh(){return m_Gmsh;};
   static const int GetNFUN(){return m_NFUN;};

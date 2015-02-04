@@ -58,6 +58,7 @@ std::vector<int> Message::m_desired_MC(m_NFUN);
 std::string Message::m_paramFile = "param";
 std::string Message::m_resDir = "res/";
 std::string Message::m_helpDir = "help/";
+int Message::m_restart = 0;
 //File/folder names
 std::string Message::DBext = ".db";
 std::string Message::PointDatabase = "Points";
@@ -221,6 +222,7 @@ void Message::Check()
       else  Message::Info("Function %d: No (setting MC[%d]=0)", i, i);
       Message::Info("MC[%d] desired=%d %s", i, m_desired_MC[i], m_ComputeMC?"":"(But not computation is asked)");
     }
+  Message::Info("Restart: %d", m_restart);
   Message::Info("=============== Grid ==============");
   Message::Info("xi_min: %g", m_xi_min);
   Message::Info("xi_max: %g", m_xi_max);
@@ -289,6 +291,7 @@ void Message::Parse()
 		  if(keyword == mmc) { m_desired_MC[i] = int_value;}
 		  if(keyword == func){ m_FunChoice[i] = (int_value ==0 ?0:1);}
 		}
+	      if(keyword == "RESTART"){m_restart = atoi(c_value.c_str());}
 	      //Check for the grid !
 	      if(keyword == "xi_min"){m_xi_min = atof(c_value.c_str());}
 	      if(keyword == "xi_max"){m_xi_max = atof(c_value.c_str());}

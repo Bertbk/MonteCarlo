@@ -104,27 +104,38 @@ void Point::LaunchMC()
     MC_MAX = std::max(MC_MAX, m_MC_to_do[ifun]);
   Message::Info("[Proc %d] I will do %d MC tests on point with id %d and (xi,y) = (%g, %g)", Message::GetRank(), MC_MAX, m_id, m_xi, m_y);
   //Prepare Res file
-  //#pragma omp parallel for private(imc)
-  // NFUN vectors of different sizes containing the results...
-  std::vector<std::vector<double>* > resultsMC(NFUN);
-  for (int ifun = 0; ifun < NFUN; ifun ++)
+  //Restart is a parameter that forces the program to print on files every time 
+  //a number of Restart computations have been done. 
+  int Restart = Message::GetRestart();
+  int irestart_end = MC_MAX/Restart + min(1, MC_MAX%Restart);
+  Message::Debug("Restart = %d, irestart_end= %d", Restart, irestart_end);
+  for (int irestart = 0; irestart < irestart_end; irestart ++)
     {
-      resultsMC[ifun] = new std::vector<double>;
-      resultsMC[ifun]->reserve(MC_MAX); //Avoiding memory problem
-    }
-  for (int imc = 0 ; imc < MC_MAX ; imc++)
-    {
-      std::vector<double> res_int;
-      ShortCyclePlus(&res_int);
+      int MC_start = irestart*Restart;
+      int MC_end = min(MC_MAX, (irestart + 1)*Restart);
+      int MC_currentLoop;
+      // NFUN vectors of different sizes containing the results...
+      std::vector<std::vector<double>* > resultsMC(NFUN);
       for (int ifun = 0; ifun < NFUN; ifun ++)
-	resultsMC[ifun]->push_back(res_int[ifun]);
+	{
+	  resultsMC[ifun] = new std::vector<double>;
+	  resultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
+	}
+//PRAGMA OMP PARALLEL FOR LOOP BLABLA
+      for (int imc = MC_start ; imc < MC_end ; imc++)
+	{
+	  std::vector<double> res_int;
+	  ShortCyclePlus(&res_int);
+	  for (int ifun = 0; ifun < NFUN; ifun ++)
+	    resultsMC[ifun]->push_back(res_int[ifun]);
+	}
+      Message::Debug("MC Restarting... for point %d", m_id);
+      //Updating files
+      WriteOnFile(&resultsMC);
+      //Cleaning
+      for (int ifun = 0; ifun < NFUN; ifun ++)
+	delete resultsMC[ifun];
     }
-  Message::Debug("MC TERMINATED FOR POINT %d", m_id);
-  //Updating files
-  WriteOnFile(&resultsMC);
-  //Cleaning
-  for (int ifun = 0; ifun < NFUN; ifun ++)
-      delete resultsMC[ifun];
   Message::Info("[Proc %d] Finnished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
 }
 
@@ -183,7 +194,6 @@ double Point::f(double xi, int ifun){
   else return -1.;
 }
 
-
 //Write on file and update data about the point...
 void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
 {
@@ -197,6 +207,7 @@ void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
 	FunWithNewResults.push_back(ifun);
     }
   int NFUNWithNewRes = FunWithNewResults.size();
+
   //Build a new res file for this Point and every functions
   std::vector<std::ofstream *> fRes(NFUNWithNewRes);
   for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux++)
@@ -218,9 +229,11 @@ void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
     {
       int ifunId = FunWithNewResults[ifunAux];
       int sizeResults = (*results)[ifunId]->size();
-      HowManyRes[ifunAux] = std::max(sizeResults, m_MC_to_do[ifunId]);
+      HowManyRes[ifunAux] = std::min(sizeResults, m_MC_to_do[ifunId]);
       //The first number if the number of results stored in the file
-      *(fRes[ifunAux]) << HowManyRes[ifunAux] << "\n";	  
+      *(fRes[ifunAux]) << HowManyRes[ifunAux] << "\n";
+      m_MC[ifunId] += HowManyRes[ifunAux];
+      m_MC_to_do[ifunId] -= HowManyRes[ifunAux];
     }
 
   //Write on files
@@ -232,15 +245,22 @@ void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
 	  *(fRes[ifunAux]) << (*(*results)[ifunId])[ires] << "\n";	  
 	}
       fRes[ifunAux]->close();
+      m_NResFiles[ifunId] ++;
     }
 
-  //Update data about the points
-  for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux ++)
+  //Root files
+  for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux++)
     {
       int ifunId = FunWithNewResults[ifunAux];
-      m_NResFiles[ifunId] ++; 
-      m_MC[ifunId] += m_MC_to_do[ifunId];
-      m_MC_to_do[ifunId] = 0;
+      std::ostringstream osifun;
+      osifun << ifunId;
+      std::string funXXName = m_myDir + FunResRootName +osifun.str() + DBext;
+      std::string commandBACKUP = "cp " + funXXName + " " + funXXName + "_backup";
+      system(commandBACKUP.c_str());
+      std::ofstream funXX(funXXName.c_str(), std::ios_base::out);
+      funXX << m_NResFiles[ifunId]<< "\n";
+      funXX << m_MC[ifunId]<< "\n";
+      funXX.close();
     }
 
   //Cleaning

@@ -13,6 +13,7 @@ class Point{
   std::string m_myDir;
   double m_xi, m_y;
   std::vector<int> m_MC; //number of simu already done (for each function)
+  std::vector<int> m_MC_DoneButNotRegistered; //number of simu done but not written on disks (for each function)
   std::vector<int> m_MC_to_do; //number of simu to do (for each function)
   std::vector<int> m_NResFiles; //number of files already written (for each function)
   std::vector<double> m_average, m_stddev; //current result in memory

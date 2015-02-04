@@ -13,7 +13,7 @@
 using namespace std;
 
 
-std::string Point::BackSlash = "/";
+std::string Point::BackSlash = Message::GetBackSlash();
 std::string Point::DBext = Message::GetDBext();
 std::string Point::PointDatabase = Message::GetPointDatabase();
 std::string Point::FullResRootName = Message::GetFullResRootName();
@@ -107,6 +107,9 @@ void Point::LaunchMC()
   //Restart is a parameter that forces the program to print on files every time 
   //a number of Restart computations have been done. 
   int Restart = Message::GetRestart();
+  if(Restart <= 0)
+    Restart = MC_MAX;
+  Message::Debug("Restart = %d, MC_MAX/Restart=%d MC_MAX%Restart=%d", Restart, MC_MAX/Restart, MC_MAX%Restart);
   int irestart_end = MC_MAX/Restart + min(1, MC_MAX%Restart);
   Message::Debug("Restart = %d, irestart_end= %d", Restart, irestart_end);
   for (int irestart = 0; irestart < irestart_end; irestart ++)
@@ -267,4 +270,46 @@ void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
   for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux ++)
     delete fRes[ifunAux];
 
+}
+
+
+void Point::PostProcessing(int ifun)
+{
+  //Folder name
+  std::stringstream iifun;
+  iifun << ifun;
+  std::string rootFunFolder = FunResFolderRootName + iifun.str() + BackSlash;
+  //Prepare vector and values...
+  double average, stddev;
+  std::vector<double> results;
+  results.reserve(m_MC[ifun]);
+  int nfiles = m_NResFiles[ifun];
+  //loop on every files of funXX and this point
+  for (int ifile = 0; ifile < nfiles ; ifile ++)
+    {
+      std::stringstream iifile;
+      iifile << ifile;
+      std::string point_resXXName = m_myDir + rootFunFolder + PointResRootName + iifile.str() + DBext; 
+      ifstream point_resXX(point_resXXName.c_str(), std::ios_base::in);
+      if(!point_resXX.is_open()){
+	Message::Warning("Could not open %s, abording...", point_resXXName.c_str());
+	Message::Finalize(EXIT_FAILURE);
+      }
+      int nMC;
+      point_resXX >> nMC;
+      for (int iMC = 0; iMC < nMC; iMC++)
+	{
+	  double currentMC;
+	  point_resXX >> currentMC;
+	  results.push_back(currentMC);
+	  average += currentMC;
+	  stddev += currentMC*currentMC;
+	}
+      point_resXX.close();
+      //Compute the average and standard deviation
+    }
+  average /= m_MC[ifun];
+  stddev = sqrt(stddev/m_MC[ifun] - average*average);
+  m_average[ifun] = average;
+  m_stddev[ifun] = stddev;
 }

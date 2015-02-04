@@ -9,6 +9,7 @@
 #include "Point.h"
 
 std::string Database::DBext = Message::GetDBext();
+std::string Database::POSext = Message::GetPOSext();
 std::string Database::PointDatabase = Message::GetPointDatabase();
 std::string Database::FullResRootName = Message::GetFullResRootName();
 std::string Database::CurrentPointDatabase = Message::GetCurrentPointDatabase();
@@ -16,6 +17,7 @@ std::string Database::PointFolderRootName = Message::GetPointFolderRootName();
 std::string Database::FunResFolderRootName = Message::GetFunResFolderRootName();
 std::string Database::FunResRootName = Message::GetFunResRootName();
 std::string Database::PointResRootName = Message::GetPointResRootName();
+std::string Database::BackSlash = Message::GetBackSlash();
 
 //Constructor
 Database::Database(std::string resdir){
@@ -127,10 +129,9 @@ void Database::ParsePointFiles(){
   Message::Info("ParsePointFiles...");
   for (int iPoint = 0; iPoint < Points.size() ; iPoint ++)
     {
-      std::stringstream iiPoint, backslash;
-      backslash  << "/";
+      std::stringstream iiPoint;
       iiPoint << iPoint;
-      std::string PointFolder = Message::GetResDir() + PointFolderRootName + iiPoint.str() + backslash.str();
+      std::string PointFolder = Message::GetResDir() + PointFolderRootName + iiPoint.str() + BackSlash;
       //Create - if not exist - the foler file
       std::string command_PointFolder = "if ! test -d " + PointFolder + "; then mkdir "+ PointFolder+"; fi";
       system(command_PointFolder.c_str());
@@ -229,10 +230,9 @@ void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y,
 
 void Database::BuildFolderPoint(int id)
 {
-      std::stringstream iiPoint, backslash;
-      backslash  << "/";
+      std::stringstream iiPoint;
       iiPoint << id;
-      std::string PointFolder = Message::GetResDir() + PointFolderRootName + iiPoint.str() + backslash.str();
+      std::string PointFolder = Message::GetResDir() + PointFolderRootName + iiPoint.str() + BackSlash;
       //Create - if not exist - the foler file
       std::string command_PointFolder = "if ! test -d " + PointFolder + "; then mkdir "+ PointFolder+"; fi";
       system(command_PointFolder.c_str());
@@ -324,4 +324,30 @@ void Database::PrintPoints(){
   Message::Info("PrintPoints...");
   for (int i = 0; i < Points.size(); i++)
     Points[i]->Print();
+}
+
+void Database::PostProcessing(){
+  int NFUN = Message::GetNFUN();
+  for (int ifun =0; ifun < NFUN; ifun ++)
+    {
+      //Folder name
+      std::stringstream iifun;
+      iifun << ifun;
+      std::string rootFunFolder = FunResFolderRootName + iifun.str() + BackSlash;
+      for (int iP = 0; iP < Points.size(); iP++)
+	  Points[iP]->PostProcessing(ifun);
+      //Write on files !
+      std::string funXXName = Message::GetResDir() + FunResRootName +iifun.str() + POSext;
+      std::ofstream funXX(funXXName.c_str(), std::ios_base::out);
+      funXX << Points.size() << "\n";
+      for (int iP = 0; iP < Points.size(); iP++)
+	funXX << Points[iP]->GetXi() << " "<< Points[iP]->GetY() << " "<< Points[iP]->GetAverage(ifun) << " "<< Points[iP]->GetStdDev(ifun) << " " << "\n";
+      funXX.close();      
+    }
+}
+
+
+void Database::PostProcessingGMSH()
+{
+
 }

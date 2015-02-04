@@ -7,7 +7,7 @@ FUN_0 = 1
 FUN_1 = 1
 FUN_2 = 1
 FUN_3 = 0
-RESTART = 5;
+RESTART = 0;
 // Grid (y_min IS NOT the limit for a particle to get out !)
 xi_min = -5
 xi_max = 5

@@ -45,6 +45,7 @@ class Point{
   void SetMCToDo(std::vector<int> *desired_MC); // Set the right MC_to_do, by comparing (differencing) m_MC and m_Desired_MC...
   void LaunchMC();
   void ShortCyclePlus(std::vector<double> *integrals);
+  void PostProcessing(int ifun);
   //double uniform(){return (1+2)/(1+(double)RAND_MAX);   }
   static double uniform(){return (1+(double)rand())/(1+(double)RAND_MAX);   }
   static double gauss(){return sqrt(-2.*log(uniform()))*cos(Message::GetDeuxPi()*uniform());}
@@ -61,24 +62,7 @@ class Point{
   double GetStdDev(int ifun){return m_stddev[ifun];}
   int GetNResFiles(int ifun){return m_NResFiles[ifun];}
   std::string GetIdDir(){return m_IdDir;}
-  /*  static int m_npoints;
-  //=========================
-  //TRAJECTORIES COMPUTATION
-  //=========================
-  //trajectories function
-  static double uniform(){return (1+(double)rand())/(1+(double)RAND_MAX);};
-  //  static double uniform(){return (1+2)/(1+(double)RAND_MAX);};
-  static double gauss(){return sqrt(-2.*log(uniform()))*cos(Message::GetDeuxPi()*uniform());};
-  void ShortCyclePlus(std::vector<std::vector<double> > *trajectories);
-  //launch the monte carlo simulations
-  void LaunchMC(char *traj_dir, int seed);
-  /*
-  //=====
-  //DATA
-  //=====
-  static double f(double xi){ return exp(-xi*xi);};
-  static double gplus(double xi, double y){return f(xi)*f(y);};
-  */
+  std::string GetMyDir(){return m_myDir;}
 };
 
 #endif

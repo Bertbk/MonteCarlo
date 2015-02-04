@@ -40,22 +40,14 @@ int main(int argc, char *argv[])
       Db.UpdatePointsToDo(Message::GetGridXi(), Message::GetGridY(), Message::GetDesiredMC());
       Db.LaunchMCSimulations();
     }
-  
-  //compute (or only recompute) average+std deviation only
-  //If(Message::GetPos)
-  //   Loop on every Done Point
-  //   Read file + compute average + standard deviation and store results
-  //EndIf
+  if(Message::GetPos())
+    {
+      Db.PostProcessing(); // write file funXX.pos on root folder
+      if(Message::GetGmsh())
+	  Db.PostProcessingGMSH(); // write .geo and .pos files (need GMSH)
+    }
 
-  //If (print)
-  //  Build Geo File
-  //  Compute Mesh (?) (system(GMSH...)
-  //  Re-read mesh to get elements (parser...)
-  //  Print Point Done on disk according to GMSH syntaxe and for every elements...
-  //EndIf
-  
-  //Destroy PointDone and PointToDo
-  //Exit smoothly
+  //Exit smoothly like a boss
   Message::Finalize(EXIT_SUCCESS);
   return 0;
 }

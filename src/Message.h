@@ -46,6 +46,7 @@ class Message{
   //File/Folder Names
   //-----------------------------
   static std::string DBext;
+  static std::string POSext;
   static std::string PointDatabase;
   static std::string FullResRootName;
   static std::string CurrentPointDatabase;
@@ -53,6 +54,7 @@ class Message{
   static std::string FunResRootName;
   static std::string PointFolderRootName;
   static std::string PointResRootName;
+  static std::string BackSlash;
   //Usefull functions
   static void BuildGrid();
 
@@ -102,6 +104,7 @@ class Message{
   //========================
   //Get String...
   static std::string GetDBext(){return DBext;}
+  static std::string GetPOSext(){return POSext;}
   static std::string GetPointDatabase(){ return PointDatabase;}
   static std::string GetFullResRootName(){ return FullResRootName;}
   static std::string GetCurrentPointDatabase(){ return CurrentPointDatabase;}
@@ -109,6 +112,7 @@ class Message{
   static std::string GetFunResFolderRootName(){ return FunResFolderRootName;}
   static std::string GetFunResRootName(){ return FunResRootName;}
   static std::string GetPointResRootName(){ return PointResRootName;}
+  static std::string GetBackSlash(){ return BackSlash;}
 
 };
 

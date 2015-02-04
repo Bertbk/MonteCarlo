@@ -61,6 +61,7 @@ std::string Message::m_helpDir = "help/";
 int Message::m_restart = 0;
 //File/folder names
 std::string Message::DBext = ".db";
+std::string Message::POSext = ".pos";
 std::string Message::PointDatabase = "Points";
 std::string Message::FullResRootName = "ResFun";
 std::string Message::CurrentPointDatabase = "currentPoint";
@@ -68,7 +69,7 @@ std::string Message::PointFolderRootName = "Point";
 std::string Message::FunResFolderRootName = "fun";
 std::string Message::FunResRootName = "fun";
 std::string Message::PointResRootName = "point_res_";
-
+std::string Message::BackSlash = "/";
 //Message
 //-------
 void Message::Initialize(int argc, char *argv[])

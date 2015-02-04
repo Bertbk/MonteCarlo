@@ -16,6 +16,7 @@ class Database {
   std::vector <Point*> PointsToDo;
   std::vector <int>    PointsIdToDo; // Id of the points to do
   static std::string DBext;
+  static std::string POSext;
   static std::string PointDatabase;
   static std::string FullResRootName;
   static std::string CurrentPointDatabase;
@@ -23,6 +24,7 @@ class Database {
   static std::string FunResRootName;
   static std::string PointFolderRootName;
   static std::string PointResRootName;
+  static std::string BackSlash;
   int NpointsToDo;
 
   //Parse the Root files: points.db, resfunXX.db, ...
@@ -34,6 +36,7 @@ class Database {
   void RebuildPointsDb(); // Rebuild points.db
   void PreparePointsToDo(); // For each points of id in "PointsIdToDo", compute the number of MC to do
   void CheckOrBuildRootFolder(); // Create res folder and basics help files (if not exist)
+
  public:
   //Constructor
   Database(std::string resdir);
@@ -42,8 +45,11 @@ class Database {
   void Init();
   //Provide an array of pointers to the Points to be treated by the MC solver
   void UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y, std::vector<int> *MC_To_Do);
- // Launch the MC simulations for every points with id in PointsIdToDo
+  // Launch the MC simulations for every points with id in PointsIdToDo
   void LaunchMCSimulations();
+  // Post Processing
+  void PostProcessing();
+  void PostProcessingGMSH();
   int FindPoint(double x, double y);
   Point* GetPointToDo(int index){return Points[PointsIdToDo[index]];}
   Point* GetPoint(int id){return Points[id];}

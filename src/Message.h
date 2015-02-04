@@ -69,6 +69,7 @@ class Message{
   static int Precision(){return 17;} //set decimal precision for output file
   static int GetRank(){return m_myRank;};
   static int GetNProc(){return m_nb_proc;};
+  static int RootMpi(){return (m_myRank == 0);}
   static int GetComputeMC(){return m_ComputeMC;};
   static int GetRestart(){return m_restart;};
   static int GetPos(){return m_Pos;};
@@ -98,7 +99,6 @@ class Message{
   static double GetDt(){return m_dt;};
   static double GetSdt(){return m_sdt;};
   //MPI DISTRIBUTER
-  static void DistributeWork(int nPointToDo, std::vector<int> *IndexOfPointToDo);
   static void DistributeWork(int N, std::vector<int> *iStart, std::vector<int> *iEnd);
   //========================
   // FILE/FOLDER NAMES...

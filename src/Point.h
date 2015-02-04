@@ -2,7 +2,10 @@
 #define _Point_H_
 
 #include<math.h>
-//#include<vector>
+#include<vector>
+#ifdef HAVE_MPI
+#include<mpi.h>
+#endif
 
 //Class that contains every points to be computed 
 class Point{
@@ -53,7 +56,7 @@ class Point{
   static double gplus(double xi, double y, int i);
   void Print();
   void Broadcast(int emitter); // receive information from emitter (mpi rank)
-#ifdef HAVE_MPI
+#if defined HAVE_MPI
   void Isend(int receiver, std::vector<MPI_Request> *request);
   void Irecv(int emitter, std::vector<MPI_Request> *request);
 #endif

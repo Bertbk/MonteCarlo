@@ -13,8 +13,8 @@
 
 #include "Message.h"
 
-#if defined(WITH_MPI)
-#include "mpi.h"
+#if defined(HAVE_MPI)
+#include <mpi.h>
 #endif
 
 #if defined(WITH_OMP)
@@ -74,18 +74,18 @@ std::string Message::BackSlash = "/";
 //-------
 void Message::Initialize(int argc, char *argv[])
 {
-#if defined(WITH_MPI)
+#if defined(HAVE_MPI)
   MPI_Init( &argc, &argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &_myRank);
-  MPI_Comm_size(MPI_COMM_WORLD, &_nb_proc);
-  Message::Info("Launched with MPI (%d processes)", _nb_proc);
+  MPI_Comm_rank(MPI_COMM_WORLD, &m_myRank);
+  MPI_Comm_size(MPI_COMM_WORLD, &m_nb_proc);
+  Message::Info("Launched with MPI (%d processes)", m_nb_proc);
 #endif
 #if defined(WITH_OMP)
 #pragma omp parallel
   {
-  _nb_threads = omp_get_num_threads();
+  m_nb_threads = omp_get_num_threads();
   }
-  Message::Info("Launched with OpenMP (%d threads)", _nb_threads);
+  Message::Info("Launched with OpenMP (%d threads)", m_nb_threads);
 #endif
   int i = 1;
   bool doCheckOnly = 0;
@@ -137,7 +137,7 @@ void Message::Info(int level, const char *format, ...)
   va_start (args, format);
   vsnprintf (str, 1024, format, args);
   va_end (args);
-  fprintf(stdout, "Info    : %s\n", str);
+  fprintf(stdout, "Info[%d] : %s\n", m_myRank,str);
   return;
 }
 
@@ -164,7 +164,7 @@ void Message::Warning(int level, const char *format, ...)
   const char *c0 = "", *c1 = "";
   c0 = "\33[1m\33[31m"; c1 = "\33[0m";
   //
-  fprintf(stdout, "%sWarning : %s%s\n", c0,str,c1);
+  fprintf(stdout, "%sWarning[%d]: %s%s\n", c0,m_myRank, str,c1);
 }
 
 //Debug...
@@ -190,26 +190,30 @@ void Message::Debug(int level, const char *format, ...)
   const char *c0 = "", *c1 = "";
   c0 = "\33[1m\33[34m"; c1 = "\33[0m";
   //
-  fprintf(stdout, "%sDebug   : %s%s\n", c0,str,c1);
+  fprintf(stdout, "%sDebug[%d]: %s%s\n", c0,m_myRank, str,c1);
 }
 
 
 // Show help of MonteCarlo (options, ...)
 void Message::Help()
 {
-	std::cout << "Monte Carlo simulator\n";
-	std::cout << "B. Thierry\n";
-	std::cout << "Options: \n";
-	std::cout << "  -par string         Select param file to parse (default = \"param\")\n";
-	std::cout << "  -check              Check param file (nothing else is done)\n";
-	std::cout << "  -v num              Set verbosity level (default = 4)\n";
-	std::cout << "  -MC                 Launch the Monte Carlo computations\n";
-	std::cout << "  -pos                Launch the Post Processing (can be used together with -MC or standalone)\n";
+  if(m_myRank>0)
+    return;
+  std::cout << "Monte Carlo simulator\n";
+  std::cout << "B. Thierry\n";
+  std::cout << "Options: \n";
+  std::cout << "  -par string         Select param file to parse (default = \"param\")\n";
+  std::cout << "  -check              Check param file (nothing else is done)\n";
+  std::cout << "  -v num              Set verbosity level (default = 4)\n";
+  std::cout << "  -MC                 Launch the Monte Carlo computations\n";
+  std::cout << "  -pos                Launch the Post Processing (can be used together with -MC or standalone)\n";
 }
 
 // Check the result of parsing the param file
 void Message::Check()
 {
+  if(m_myRank !=0)
+    return;
   Message::Info("Check param file...");
   Message::Info("========== Global params ==========");
   Message::Info("Res directory  : %s", m_resDir.c_str());
@@ -237,7 +241,7 @@ void Message::Check()
 //To quit properly like a boss
 void Message::Finalize(int status)
 {
-#if defined(WITH_MPI)
+#if defined(HAVE_MPI)
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
@@ -327,16 +331,6 @@ void Message::BuildGrid()
 	  m_y.push_back(m_y_min + j*m_dy);
 	}
     }
-}
-
-void Message::DistributeWork(int nPointToDo, std::vector<int> *IndexOfPointToDo)
-{
-  //Given a number nPointToDo, it creates an array different for every MPI_Process. For example if there are 3 process...
-  // Rank 0 : 0, 3, 6, 9, ...
-  // Rank 1 : 1, 4, 7, 10, ...
-  // Rank 2 : 2, 5, 8, 11, ...
-  for (int i = m_myRank; i < nPointToDo; i+=m_nb_proc)
-    IndexOfPointToDo->push_back(i);
 }
 
 void Message::DistributeWork(int N, std::vector<int> *iStart, std::vector<int> *iEnd)

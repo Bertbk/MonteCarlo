@@ -331,36 +331,36 @@ void Point::Broadcast(int emitter)
 #endif
 }
 
-#ifdef HAVE_MPI
+#if defined HAVE_MPI
 void Point::Isend(int receiver, std::vector<MPI_Request> *request)
 {
   const int NQuantities = 5;
   std::vector<int> Tag(NQuantities);
   for (int i = 0; i < NQuantities; i++)
     Tag[i] = m_id*100 + i;
-  int cpt = request.size();
+  int cpt = request->size();
   request->resize(request->size() + NQuantities);
-  MPI_Isend(&m_MC[0], m_MC.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
-  MPI_Isend(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
-  MPI_Isend(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
-  MPI_Isend(&m_average[0], m_average.size(), MPI_DOUBLE, receiver, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
-  MPI_Isend(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, receiver, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+  MPI_Isend(&m_MC[0], m_MC.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
+  MPI_Isend(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
+  MPI_Isend(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
+  MPI_Isend(&m_average[0], m_average.size(), MPI_DOUBLE, receiver, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
+  MPI_Isend(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, receiver, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
 }
 #endif
 
-#ifdef HAVE_MPI
-void Point::Irecv(int emitter)
+#if defined HAVE_MPI
+void Point::Irecv(int emitter, std::vector<MPI_Request> *request)
 {
   const int NQuantities = 5;
   std::vector<int> Tag(NQuantities);
   for (int i = 0; i < NQuantities; i++)
     Tag[i] = m_id*100 + i;
-  int cpt = request.size();
+  int cpt = request->size();
   request->resize(request->size() + NQuantities);
-  MPI_Irecv(&m_MC[0], m_MC.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
-  MPI_Irecv(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
-  MPI_Irecv(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
-  MPI_Irecv(&m_average[0], m_average.size(), MPI_DOUBLE, emitter, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
-  MPI_Irecv(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, emitter, Tag[cpt], MPI_COMM_WORLD, &request[cpt]); cpt ++;
+  MPI_Irecv(&m_MC[0], m_MC.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
+  MPI_Irecv(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
+  MPI_Irecv(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
+  MPI_Irecv(&m_average[0], m_average.size(), MPI_DOUBLE, emitter, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
+  MPI_Irecv(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, emitter, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
 }
 #endif

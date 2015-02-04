@@ -12,11 +12,24 @@ endif()
 project(MonteCarlo CXX)
 # ==============
 
-option(WITH_MPI "Compile with MPI" OFF)
-option(WITH_OMP "Compile with OpenMP" OFF)
+option(HAVE_MPI "Compile with MPI" OFF)
+option(HAVE_OMP "Compile with OpenMP" OFF)
+
+if(HAVE_MPI)
+  find_package(MPI REQUIRED)
+  include_directories(${MPI_INCLUDE_PATH})
+  if(MPI_FOUND)
+  set(CMAKE_CXX_COMPILER mpicxx)
+   add_definitions(-DHAVE_MPI)
+  endif(MPI_FOUND)
+endif(HAVE_MPI)
 
 add_executable(MonteCarlo
 Message.cpp
 Point.cpp
 Database.cpp
 Main_Monte.cpp)
+
+if(HAVE_MPI)
+target_link_libraries(MonteCarlo ${MPI_CXX_LIBRARIES})
+endif(HAVE_MPI)

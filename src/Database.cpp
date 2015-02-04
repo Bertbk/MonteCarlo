@@ -45,6 +45,8 @@ void Database::Init()
 
 void Database::CheckOrBuildRootFolder()
 {
+  if(!Message::RootMpi())
+    return;
   //Create result folder (if does not exist)
   std::string command = "if ! test -d " + m_resDir + "; then mkdir "+ m_resDir+"; fi";
   system(command.c_str());
@@ -235,39 +237,43 @@ void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y,
 
 void Database::BuildFolderPoint(int id)
 {
-      std::stringstream iiPoint;
-      iiPoint << id;
-      std::string PointFolder = Message::GetResDir() + PointFolderRootName + iiPoint.str() + BackSlash;
-      //Create - if not exist - the foler file
-      std::string command_PointFolder = "if ! test -d " + PointFolder + "; then mkdir "+ PointFolder+"; fi";
-      system(command_PointFolder.c_str());
-      for (int ifun = 0; ifun < Message::GetNFUN() ; ifun ++)
+  if(!Message::RootMpi())
+    return;  
+  std::stringstream iiPoint;
+  iiPoint << id;
+  std::string PointFolder = Message::GetResDir() + PointFolderRootName + iiPoint.str() + BackSlash;
+  //Create - if not exist - the foler file
+  std::string command_PointFolder = "if ! test -d " + PointFolder + "; then mkdir "+ PointFolder+"; fi";
+  system(command_PointFolder.c_str());
+  for (int ifun = 0; ifun < Message::GetNFUN() ; ifun ++)
+    {
+      std::stringstream iifun;
+      iifun << ifun;
+      //Check if folder exists
+      std::string FunFolder = PointFolder + FunResFolderRootName + iifun.str();
+      std::string command_FunFolder = "if ! test -d " + FunFolder + "; then mkdir "+ FunFolder+"; fi";
+      system(command_FunFolder.c_str());
+      std::string FunFileName = PointFolder + FunResRootName + iifun.str() + DBext;
+      std::ifstream FunDb(FunFileName.c_str(), std::ios_base::in);
+      if(FunDb.is_open())
 	{
-	  std::stringstream iifun;
-	  iifun << ifun;
-	  //Check if folder exists
-	  std::string FunFolder = PointFolder + FunResFolderRootName + iifun.str();
-	  std::string command_FunFolder = "if ! test -d " + FunFolder + "; then mkdir "+ FunFolder+"; fi";
-	  system(command_FunFolder.c_str());
-	  std::string FunFileName = PointFolder + FunResRootName + iifun.str() + DBext;
-	  std::ifstream FunDb(FunFileName.c_str(), std::ios_base::in);
-	  if(FunDb.is_open())
-	    {
-	      Message::Warning("BuildFolderPoint: %s already exists in %s!!!", FunFileName.c_str(), PointFolder.c_str());
-	      FunDb.close();
-	    }
-	  else{
-	    //Create summary file funXX.db
-	    std::ofstream FunDbWrite(FunFileName.c_str(), std::ios_base::out);
-	    FunDbWrite << 0 << std::endl; // MC done (total)
-	    FunDbWrite << 0 << std::endl; // N files
-	    FunDbWrite.close();
-	  }
+	  Message::Warning("BuildFolderPoint: %s already exists in %s!!!", FunFileName.c_str(), PointFolder.c_str());
+	  FunDb.close();
 	}
+      else{
+	//Create summary file funXX.db
+	std::ofstream FunDbWrite(FunFileName.c_str(), std::ios_base::out);
+	FunDbWrite << 0 << std::endl; // MC done (total)
+	FunDbWrite << 0 << std::endl; // N files
+	FunDbWrite.close();
+      }
+    }
 }
 
 void Database::RebuildPointsDb()
 {
+  if(!Message::RootMpi())
+    return;
   Message::Info("RebuildPointsDb...");
   //Backup file
   std::string backupcommand;

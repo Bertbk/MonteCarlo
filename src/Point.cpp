@@ -103,6 +103,8 @@ void Point::LaunchMC()
   for (int ifun = 0 ; ifun < NFUN ; ifun ++)
     MC_MAX = std::max(MC_MAX, m_MC_to_do[ifun]);
   Message::Info("[Proc %d] I will do %d MC tests on point with id %d and (xi,y) = (%g, %g)", Message::GetRank(), MC_MAX, m_id, m_xi, m_y);
+  if(MC_MAX <= 0)
+    return;
   //Prepare Res file
   //Restart is a parameter that forces the program to print on files every time 
   //a number of Restart computations have been done. 

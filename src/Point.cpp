@@ -25,6 +25,7 @@ std::string Point::PointFolderRootName = Message::GetPointFolderRootName();
 std::string Point::FunResFolderRootName = Message::GetFunResFolderRootName();
 std::string Point::FunResRootName = Message::GetFunResRootName();
 std::string Point::PointResRootName = Message::GetPointResRootName();
+const int Point::m_NQuantities = 5;
 
 
 //constructor
@@ -328,33 +329,41 @@ void Point::Broadcast(int emitter)
 #if defined HAVE_MPI
 void Point::Isend(int receiver, std::vector<MPI_Request> *request)
 {
-  const int NQuantities = 5;
-  std::vector<int> Tag(NQuantities);
-  for (int i = 0; i < NQuantities; i++)
+  std::vector<int> Tag(m_NQuantities);
+  for (int i = 0; i < m_NQuantities; i++)
     Tag[i] = m_id*100 + i;
-  int cpt = request->size();
-  request->resize(request->size() + NQuantities);
-  MPI_Isend(&m_MC[0], m_MC.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
-  MPI_Isend(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
-  MPI_Isend(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
-  MPI_Isend(&m_average[0], m_average.size(), MPI_DOUBLE, receiver, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
-  MPI_Isend(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, receiver, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
+  int cpt = 0;
+  MPI_Request m0;
+  MPI_Isend(&m_MC[0], m_MC.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &m0); cpt ++;
+  request->push_back(m0);  MPI_Request m1;
+  MPI_Isend(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &m1); cpt ++;
+  request->push_back(m1);  MPI_Request m2;
+  MPI_Isend(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, receiver, Tag[cpt], MPI_COMM_WORLD, &m2); cpt ++;
+  request->push_back(m2);  MPI_Request m3;
+  MPI_Isend(&m_average[0], m_average.size(), MPI_DOUBLE, receiver, Tag[cpt], MPI_COMM_WORLD, &m3); cpt ++;
+  request->push_back(m3);  MPI_Request m4;
+  MPI_Isend(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, receiver, Tag[cpt], MPI_COMM_WORLD, &m4); cpt ++;
+  request->push_back(m4);
 }
 #endif
 
 #if defined HAVE_MPI
 void Point::Irecv(int emitter, std::vector<MPI_Request> *request)
 {
-  const int NQuantities = 5;
-  std::vector<int> Tag(NQuantities);
-  for (int i = 0; i < NQuantities; i++)
+  std::vector<int> Tag(m_NQuantities);
+  for (int i = 0; i < m_NQuantities; i++)
     Tag[i] = m_id*100 + i;
-  int cpt = request->size();
-  request->resize(request->size() + NQuantities);
-  MPI_Irecv(&m_MC[0], m_MC.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
-  MPI_Irecv(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
-  MPI_Irecv(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
-  MPI_Irecv(&m_average[0], m_average.size(), MPI_DOUBLE, emitter, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
-  MPI_Irecv(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, emitter, Tag[cpt], MPI_COMM_WORLD, &(*request)[cpt]); cpt ++;
+  int cpt = 0;
+  MPI_Request m0;
+  MPI_Irecv(&m_MC[0], m_MC.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &m0); cpt ++;
+  request->push_back(m0);  MPI_Request m1;
+  MPI_Irecv(&m_MC_to_do[0], m_MC_to_do.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &m1); cpt ++;
+  request->push_back(m1);  MPI_Request m2;
+  MPI_Irecv(&m_NResFiles[0], m_NResFiles.size(), MPI_INT, emitter, Tag[cpt], MPI_COMM_WORLD, &m2); cpt ++;
+  request->push_back(m2);  MPI_Request m3;
+  MPI_Irecv(&m_average[0], m_average.size(), MPI_DOUBLE, emitter, Tag[cpt], MPI_COMM_WORLD, &m3); cpt ++;
+  request->push_back(m3);  MPI_Request m4;
+  MPI_Irecv(&m_stddev[0], m_stddev.size(), MPI_DOUBLE, emitter, Tag[cpt], MPI_COMM_WORLD, &m4); cpt ++;
+  request->push_back(m4);
 }
 #endif

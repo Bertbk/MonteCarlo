@@ -366,15 +366,42 @@ void Database::PostProcessing(){
       iifun << ifun;
       std::string rootFunFolder = FunResFolderRootName + iifun.str() + BackSlash;
       //This loop is parallelizable (MPI)
-      for (int iP = 0; iP < Points.size(); iP++)
+      int nPToPos = Points.size();
+      int myRank = Message::GetRank();
+      int nMpi = Message::GetNProc();
+      std::vector<int> iP_start, iP_end;
+      Message::DistributeWork(nPToPos, &iP_start, &iP_end);
+      for (int iP = iP_start[myRank] ; iP < iP_end[myRank]; iP++)
 	  Points[iP]->PostProcessing(ifun);
-      //Write on files !
-      std::string funXXName = Message::GetResDir() + FunResRootName +iifun.str() + POSext;
-      std::ofstream funXX(funXXName.c_str(), std::ios_base::out);
-      funXX << Points.size() << "\n";
-      for (int iP = 0; iP < Points.size(); iP++)
-	funXX << Points[iP]->GetXi() << " "<< Points[iP]->GetY() << " "<< Points[iP]->GetAverage(ifun) << " "<< Points[iP]->GetStdDev(ifun) << " " << "\n";
-      funXX.close();      
+#if defined HAVE_MPI
+      //Exchange of information (give everything to proc 0)
+      std::vector<MPI_Request> request(0);
+      if(myRank == 0)
+	{
+	  for (int iRank = 1; iRank < nMpi; iRank ++)
+	    {
+	      for (int iP = iP_start[iRank] ; iP < iP_end[iRank]; iP++)
+		Points[iP]->Irecv(iRank, &request);
+	    }
+	}
+      else
+	{
+	  for (int iP = iP_start[myRank] ; iP < iP_end[myRank]; iP++)
+	    Points[iP]->Isend(0, &request);
+	}
+      std::vector< MPI_Status > tab_status(request.size());
+      MPI_Waitall(request.size(), &request[0], &tab_status[0]);
+#endif
+      if(Message::RootMpi())
+	{
+	  //Write on files !
+	  std::string funXXName = Message::GetResDir() + FunResRootName +iifun.str() + POSext;
+	  std::ofstream funXX(funXXName.c_str(), std::ios_base::out);
+	  funXX << Points.size() << "\n";
+	  for (int iP = 0; iP < Points.size(); iP++)
+	    funXX << Points[iP]->GetXi() << " "<< Points[iP]->GetY() << " "<< Points[iP]->GetAverage(ifun) << " "<< Points[iP]->GetStdDev(ifun) << " " << "\n";
+	  funXX.close();
+	}
     }
 }
 

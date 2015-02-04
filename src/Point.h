@@ -30,6 +30,7 @@ class Point{
   static std::string FunResRootName;
   static std::string PointFolderRootName;
   static std::string PointResRootName;
+  static const int m_NQuantities; //Quantities to exchange with MPI
 
   void WriteOnFile(std::vector<std::vector<double>*> *results);
 

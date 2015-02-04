@@ -72,7 +72,6 @@ void Point::SetMCToDo(std::vector<int> *desired_MC)
 	m_MC_to_do[ifun] = (*desired_MC)[ifun] - m_MC[ifun];
       else
 	m_MC_to_do[ifun] = 0;
-      Message::Debug("SetMCToDo, Point Id %d, ifun = %d, MC done= %d, MC desired = %d, MC to do = %d", m_id, ifun, m_MC[ifun], (*desired_MC)[ifun], m_MC_to_do[ifun]);
     }  
 }
 
@@ -114,9 +113,7 @@ void Point::LaunchMC()
   int Restart = Message::GetRestart();
   if(Restart <= 0)
     Restart = MC_MAX;
-  Message::Debug("Restart = %d, MC_MAX/Restart=%d MC_MAX%Restart=%d", Restart, MC_MAX/Restart, MC_MAX%Restart);
   int irestart_end = MC_MAX/Restart + min(1, MC_MAX%Restart);
-  Message::Debug("Restart = %d, irestart_end= %d", Restart, irestart_end);
   for (int irestart = 0; irestart < irestart_end; irestart ++)
     {
       int MC_start = irestart*Restart;
@@ -137,7 +134,6 @@ void Point::LaunchMC()
 	  for (int ifun = 0; ifun < NFUN; ifun ++)
 	    resultsMC[ifun]->push_back(res_int[ifun]);
 	}
-      Message::Debug("MC Restarting... for point %d", m_id);
       //Updating files
       WriteOnFile(&resultsMC);
       //Cleaning
@@ -221,12 +217,10 @@ void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
   for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux++)
     {
       int ifunId = FunWithNewResults[ifunAux];
-      Message::Debug("ifunId = %d", ifunId);
       std::ostringstream osifun, osiNbFiles;
       osifun << ifunId;
       osiNbFiles << m_NResFiles[ifunId];
       std::string resFileName = m_myDir + FunResFolderRootName + osifun.str() + BackSlash + PointResRootName + osiNbFiles.str()  + DBext;
-      Message::Debug("Writing on %s",resFileName.c_str());
       fRes[ifunAux] = new ofstream(resFileName.c_str(), std::ios_base::out); 
       if(!fRes[ifunAux]->is_open()) Message::Warning("Problem opening file \"%s\"", resFileName.c_str());
     }

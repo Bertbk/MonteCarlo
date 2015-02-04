@@ -105,14 +105,13 @@ int Database::ParseRootFiles(){
   std::ifstream PointsDb(PointsDbName.c_str(), std::ios_base::in);
   if(!PointsDb.is_open())
     {
-      Message::Warning("No database file found... I hope there is no work there because it's gonna be erazed by new results...");
+      if(Message::RootMpi())
+	Message::Warning("No database file found... I hope there is no work there because it's gonna be erazed by new results...");
       return 0;
     }
   else
     {
       Message::Info("Database file found! Let's rock!");
-      //      std::string line;
-      //      getline(PointsDb, line);
       int Npoints;
       PointsDb >> Npoints;
       Points.resize(Npoints);
@@ -129,7 +128,7 @@ int Database::ParseRootFiles(){
 }
 
 void Database::ParsePosFiles(){
-
+  Message::Info("ParsePosFiles...");
 }
 
 void Database::ParsePointFiles(){
@@ -188,7 +187,6 @@ void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y,
   int ny = Y->size();
   int nmc = MCToDo->size();
   Message::Info("nxi = %d ny = %d MaxId = %d Npoints = %d", nxi, ny, Points.size(), Points.size());
-
   if(nxi != ny)
     {
       Message::Warning("Vector Xi and Y not of the same size ! Abording...");
@@ -229,7 +227,12 @@ void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y,
 	  //Increase NewId size
 	  newId++;
 	}
+
       //Update points.db
+#if defined HAVE_MPI
+      //Possible problem with reading process still searching the file...
+      MPI_Barrier(MPI_COMM_WORLD);
+#endif
       RebuildPointsDb();
     }
   PreparePointsToDo();
@@ -326,12 +329,13 @@ void Database::LaunchMCSimulations()
   int myRank = Message::GetRank();
   std::vector<int> iP_start, iP_end;
   Message::DistributeWork(npToDo, &iP_start, &iP_end);
-    for (int iP = iP_start[myRank] ; iP < iP_end[myRank]; iP++)
+  for (int iP = iP_start[myRank] ; iP < iP_end[myRank]; iP++)
     {
       int id = PointsIdToDo[iP];
       Points[id]->LaunchMC();
     }
 #ifdef HAVE_MPI
+  //Exchange information about the point
   int nMpi = Message::GetNProc();
   for (int iRank = 0 ; iRank < nMpi; iRank++)
     {
@@ -346,6 +350,8 @@ void Database::LaunchMCSimulations()
 
 
 void Database::PrintPoints(){
+  if(!Message::RootMpi())
+    return;
   Message::Info("PrintPoints...");
   for (int i = 0; i < Points.size(); i++)
     Points[i]->Print();

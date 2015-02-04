@@ -36,7 +36,8 @@ int main(int argc, char *argv[])
   //Reading which points have been done
   if(Message::GetComputeMC())
     {
-      Message::Info("Let's compute some MC...");
+      if(Message::RootMpi())
+	Message::Info("Let's compute some MC...");
       Db.UpdatePointsToDo(Message::GetGridXi(), Message::GetGridY(), Message::GetDesiredMC());
       Db.LaunchMCSimulations();
     }

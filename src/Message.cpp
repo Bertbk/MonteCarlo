@@ -78,7 +78,8 @@ void Message::Initialize(int argc, char *argv[])
   MPI_Init( &argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &m_myRank);
   MPI_Comm_size(MPI_COMM_WORLD, &m_nb_proc);
-  Message::Info("Launched with MPI (%d processes)", m_nb_proc);
+  if(m_myRank == 0)
+    Message::Info("Launched with MPI (%d processes)", m_nb_proc);
 #endif
 #if defined(WITH_OMP)
 #pragma omp parallel

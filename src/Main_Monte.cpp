@@ -34,29 +34,12 @@ int main(int argc, char *argv[])
   //Seed of rand function
   srand(time(NULL) - 360000*Message::GetRank());
   //Reading which points have been done
-  //MPI : decide who does what ...
-  
   if(Message::GetComputeMC())
     {
       Message::Info("Let's compute some MC...");
       Db.UpdatePointsToDo(Message::GetGridXi(), Message::GetGridY(), Message::GetDesiredMC());
-      //      Message::DistributeWork(nPointToDo, &IndexOfPointToDo);
-      //      for(int i =0; i < nPointToDo; i++)
-	{
-	  //  Point *cPoint = PointToDo[IndexOfPointToDo[i]];
-	  //Prepare folder, files,...
-	  //	  cPoint->LaunchMC();
-	  //    For each MC simulations:
-	  //    -- Compute res
-	  //    -- Store on disk (resDir/idXX/res_aux file)
-	  //    //UNSURE IF I DON'T SPLIT EVERYTHING (SIMPLER)If(Message::GetPos) Then Also compute Average+Std Deviation and store everything
-	  //    Concatenate resDir/idXX/res_aux files
-	  //    Update DBB file for this point (resDir/dbb_aux)
-	}//  End Loop
-      // Backup resDir/ddb to resDir/ddb_backup($TIME)
-      //  Concatenate resDir/ddb_aux to resDir/ddb (whatever the order of id...)
-      //Delete Every points PointDone, and do PointDone = PointToDo
-    }//EndIf
+      Db.LaunchMCSimulations();
+    }
   
   //compute (or only recompute) average+std deviation only
   //If(Message::GetPos)

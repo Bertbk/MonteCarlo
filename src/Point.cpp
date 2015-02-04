@@ -12,6 +12,18 @@
 
 using namespace std;
 
+
+std::string Point::BackSlash = "/";
+std::string Point::DBext = Message::GetDBext();
+std::string Point::PointDatabase = Message::GetPointDatabase();
+std::string Point::FullResRootName = Message::GetFullResRootName();
+std::string Point::CurrentPointDatabase = Message::GetCurrentPointDatabase();
+std::string Point::PointFolderRootName = Message::GetPointFolderRootName();
+std::string Point::FunResFolderRootName = Message::GetFunResFolderRootName();
+std::string Point::FunResRootName = Message::GetFunResRootName();
+std::string Point::PointResRootName = Message::GetPointResRootName();
+
+
 //constructor
 Point::Point(int id, double xi, double y){
   m_id = id;
@@ -22,6 +34,10 @@ Point::Point(int id, double xi, double y){
   m_NResFiles.resize(Message::GetNFUN());
   m_average.resize(Message::GetNFUN());
   m_stddev.resize(Message::GetNFUN());
+  std::stringstream iid;
+  iid << m_id;
+  m_id_str = iid.str();
+  m_myDir = Message::GetResDir() + PointFolderRootName + m_id_str + BackSlash;
 }
 
 Point::Point(Point *p){
@@ -84,48 +100,32 @@ void Point::LaunchMC()
 {
   int MC_MAX = 0;
   const int NFUN = Message::GetNFUN();
-  for (int i = 0 ; i < NFUN ; i ++)
-    MC_MAX = max(MC_MAX, m_MC_to_do[i]);
-  Message::Info("[Proc %d] I will do %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
-  //Prepare Aux file
-  std::vector<std::string> auxFile(NFUN);
-  std::vector<std::ofstream *> fRes(NFUN);
-  for (int i = 0; i < NFUN; i++)
-    {
-	  fRes[i] = new ofstream;
-      std::ostringstream oss;
-      oss << i;
-      auxFile[i] = Message::GetResDir() + m_IdDir + "res_aux" + oss.str();
-//	  std::ofstream (*(fRes[i]))(auxFile[i].c_str());
-      fRes[i]->open(auxFile[i].c_str()); // TO CHANGE!!!!!!!!!
-      if(!fRes[i]->is_open()) Message::Warning("Problem opening file \"%s\"", auxFile[i].c_str()); // TO CHECK
-    }
+  for (int ifun = 0 ; ifun < NFUN ; ifun ++)
+    MC_MAX = std::max(MC_MAX, m_MC_to_do[ifun]);
+  Message::Info("[Proc %d] I will do %d MC tests on point with id %d and (xi,y) = (%g, %g)", Message::GetRank(), MC_MAX, m_id, m_xi, m_y);
+  //Prepare Res file
   //#pragma omp parallel for private(imc)
+  // NFUN vectors of different sizes containing the results...
+  std::vector<std::vector<double>* > resultsMC(NFUN);
+  for (int ifun = 0; ifun < NFUN; ifun ++)
+    {
+      resultsMC[ifun] = new std::vector<double>;
+      resultsMC[ifun]->reserve(MC_MAX); //Avoiding memory problem
+    }
   for (int imc = 0 ; imc < MC_MAX ; imc++)
     {
       std::vector<double> res_int;
       ShortCyclePlus(&res_int);
-      //print on aux_files
-      for (int i = 0; i < NFUN; i++)
-		*(fRes[i]) <<  res_int[i] << "\n";
+      for (int ifun = 0; ifun < NFUN; ifun ++)
+	resultsMC[ifun]->push_back(res_int[ifun]);
     }
-  for (int i = 0; i < NFUN; i++)
-    fRes[i]->close();
-  //Concatenate auxilaries file
-  for (int i = 0 ; i < NFUN ; i++)
-    {
-      std::ostringstream oss;
-      oss << i;
-      std::string command, resFile;
-      resFile = Message::GetResDir() + m_IdDir + "res" + oss.str();
-      command = "cat " + resFile + " "+ auxFile[i]; // TO CHECK
-      system(command.c_str());
-    }
-  Message::Info("[Proc %d] Finnished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
-
+  Message::Debug("MC TERMINATED FOR POINT %d", m_id);
+  //Updating files
+  WriteOnFile(&resultsMC);
   //Cleaning
-  for (int i = 0; i < NFUN; i++)
-	  delete fRes[i];
+  for (int ifun = 0; ifun < NFUN; ifun ++)
+      delete resultsMC[ifun];
+  Message::Info("[Proc %d] Finnished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
 }
 
 void Point::ShortCyclePlus(std::vector<double> *integrals)
@@ -172,140 +172,79 @@ void Point::ShortCyclePlus(std::vector<double> *integrals)
   return;
 }
 
-double Point::gplus(double xi, double y, int i)
+double Point::gplus(double xi, double y, int ifun)
 {
-  if( i == 0) return f(xi, i)*f(y, i);
+  if( ifun == 0) return f(xi, ifun)*f(y, ifun);
   else return -1.;
 }
 
-double Point::f(double xi, int i){ 
-  if(i == 0) return exp(-xi*xi);
+double Point::f(double xi, int ifun){ 
+  if(ifun == 0) return exp(-xi*xi);
   else return -1.;
 }
 
 
-/*
-
-
-//Check if this point has already been done or not
-void Point::Check()
+//Write on file and update data about the point...
+void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
 {
-  int nres = MyResults::GetNRES();
-  for (int i = 0; i < nres; i++)
+  int NFUN = Message::GetNFUN();
+  //Index of the functions that have new results to be stored !
+  std::vector<int> FunWithNewResults;
+  FunWithNewResults.reserve(NFUN);
+  for (int ifun = 0; ifun < NFUN; ifun ++)
     {
-      double x=MyResults::GetX(i), y = MyResults::GetY(i);
-      if(_xi == x && m_y == y)
-      {
-	int id = MyResults::GetId(i), MC = MyResults::GetMC(i);
-	int MC_to_do = m_MC - MC;
-	this->SetId(id);
-	if(MC_to_do <= 0)
-	  Message::Warning("[Id %d] Already exist with desired number of simulations", id);
-	else
-	  Message::Warning("[Id %d] Already exist, only %d simu to reach %d", id, MC_to_do, m_MC);
-	this->Set(_xi, m_y, MC_to_do);
-      }
-    }  
-  if(_id == -1) //Set new id
-    this->SetNewId();
-  return;
-}
-
-//Ask MyResults for a new id and set it to the current point
-void Point::SetNewId()
-{
-  int id = MyResults::GetNewId();
-  m_id = id;
-  Message::Info(2,"New ID provided");
-  return;
-}
-
-
-void Point::PrepareMyFile(char *res_dir, int *file_id)
-{
-  std::cout.precision(Message::Precision());
-  int id = m_id;
-  double xi=_xi, y=_y;
-  char command[128], res_dir_loc[128];
-  sprintf(res_dir_loc, "./%s/Id%d/", res_dir, id);
-  sprintf(command, "if ! test -d %s; then mkdir %s; fi", res_dir_loc, res_dir_loc);
-  //  sprintf(command, "mkdir %s", res_dir_loc);
-  system(command);
-  //create file (search file id that is free (no erase))
-  int fcpt = 0;
-  char file_aux[128];
-  sprintf(file_aux, "%sres%d.mc", res_dir_loc, fcpt);
-  std::ifstream fNewRes_aux(file_aux);
-  while(!fNewRes_aux.fail())
-    {
-      fNewRes_aux.close();
-      fcpt++;
-      sprintf(file_aux, "%sres%d.mc", res_dir_loc, fcpt);
-      fNewRes_aux.open(file_aux);
+      if(m_MC_to_do[ifun] > 0)
+	FunWithNewResults.push_back(ifun);
     }
-  *file_id = fcpt;
-  
-  //create/verify file containing (x,y) coordinate
-  char coord_file[128];
-  sprintf(coord_file, "%smyCoord.mc", res_dir_loc);
-  //small checking on the coordinate of the points...
-  std::ifstream fcoord_in(coord_file);
-  if((fcoord_in.fail()))
+  int NFUNWithNewRes = FunWithNewResults.size();
+  //Build a new res file for this Point and every functions
+  std::vector<std::ofstream *> fRes(NFUNWithNewRes);
+  for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux++)
     {
-      std::ofstream fcoord(coord_file);
-      fcoord << xi << "\n" << y;
-      fcoord.close();
+      int ifunId = FunWithNewResults[ifunAux];
+      Message::Debug("ifunId = %d", ifunId);
+      std::ostringstream osifun, osiNbFiles;
+      osifun << ifunId;
+      osiNbFiles << m_NResFiles[ifunId];
+      std::string resFileName = m_myDir + FunResFolderRootName + osifun.str() + BackSlash + PointResRootName + osiNbFiles.str()  + DBext;
+      Message::Debug("Writing on %s",resFileName.c_str());
+      fRes[ifunAux] = new ofstream(resFileName.c_str(), std::ios_base::out); 
+      if(!fRes[ifunAux]->is_open()) Message::Warning("Problem opening file \"%s\"", resFileName.c_str());
     }
-  else{//check file
-    double xi_aux, y_aux;
-    fcoord_in >> xi_aux >> y_aux;
-    fcoord_in.close();
-    bool test_file=(xi == xi_aux && y == y_aux);
-    if(!test_file)
-      {//There is a (huge) problem, better keep all information in a separate file
-	Message::Warning("[Id %d] Bad coordinate detected !", id);
-	char coord_file_aux[128];
-	sprintf(coord_file_aux, "%s_aux%d", coord_file, fcpt);
-	std::ofstream fcoord(coord_file_aux);
-	fcoord << xi << "\n" << y;
-	fcoord.close();
-      }
-  }
-  return;
+
+  //THIS IS JUST TO DELETE SOME RESULTS TO GET THE EXACT NUMBER OF MC... YES, IT'S WEIRD !!
+  std::vector<int> HowManyRes(NFUNWithNewRes);
+  for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux++)
+    {
+      int ifunId = FunWithNewResults[ifunAux];
+      int sizeResults = (*results)[ifunId]->size();
+      HowManyRes[ifunAux] = std::max(sizeResults, m_MC_to_do[ifunId]);
+      //The first number if the number of results stored in the file
+      *(fRes[ifunAux]) << HowManyRes[ifunAux] << "\n";	  
+    }
+
+  //Write on files
+  for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux++)
+    {
+      int ifunId = FunWithNewResults[ifunAux];
+      for (int ires =0; ires < HowManyRes[ifunAux]; ires++)
+	{
+	  *(fRes[ifunAux]) << (*(*results)[ifunId])[ires] << "\n";	  
+	}
+      fRes[ifunAux]->close();
+    }
+
+  //Update data about the points
+  for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux ++)
+    {
+      int ifunId = FunWithNewResults[ifunAux];
+      m_NResFiles[ifunId] ++; 
+      m_MC[ifunId] += m_MC_to_do[ifunId];
+      m_MC_to_do[ifunId] = 0;
+    }
+
+  //Cleaning
+  for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux ++)
+    delete fRes[ifunAux];
+
 }
-
-void Point::LaunchMC(char *traj_dir, int seed)
-{
-  Message::Info("[Proc %d] I will do %d MC tests on point %g %g", Message::GetCommRank(), m_MC, m_xi, m_y);
-
-  /*
-  //change seed
-  //time(NULL) - 360000*myRank
-  srand(seed);
-  //Create directory (if doesn't exist)
-  int file_id;
-  PrepareMyFile(traj_dir, &file_id);
-  char traj_dir_loc[128], traj_file[128];
-  sprintf(traj_dir_loc, "./%s/Id%d/", traj_dir, m_id);
-  sprintf(traj_file, "%sres%d.mc", traj_dir_loc, file_id);
-  std::ofstream fNewRes(traj_file);
-  
-  //#pragma omp parallel for private(imc)
-  myStr << "$MC\n"<< m_MC << "\n";
-  for (int imc = 0 ; imc < m_MC ; imc++)
-    {
-      Message::Info("%d",imc);
-      std::vector<std::vector<double> > traj_imc;
-      ShortCyclePlus(&traj_imc);
-      std::stringstream myStr(ostringstream::out|ios::binary);
-      myStr << traj_imc.size() << "\n";
-      for (int i = 0; i < traj_imc.size(); i++)
-	myStr << std::setprecision(Message::Precision()) << traj_imc[i][0] << " " << std::setprecision(Message::Precision()) << traj_imc[i][1] << "\n";      
-      fNewRes << myStr.str();
-    }
-  fNewRes.close(); 
-  */
-/*}
-
-*/
-

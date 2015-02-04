@@ -52,11 +52,21 @@ double Message::m_y_min=0, Message::m_y_max=5, Message::m_dy=5;
 std::vector<double> Message::m_xi;
 std::vector<double> Message::m_y;
 //choice of function (for final computation)
-const int Message::m_NFUN = 4;
+const int Message::m_NFUN = 1;
 std::vector<int> Message::m_FunChoice(m_NFUN);
 std::vector<int> Message::m_desired_MC(m_NFUN);
 std::string Message::m_paramFile = "param";
 std::string Message::m_resDir = "res/";
+std::string Message::m_helpDir = "help/";
+//File/folder names
+std::string Message::DBext = ".db";
+std::string Message::PointDatabase = "Points";
+std::string Message::FullResRootName = "ResFun";
+std::string Message::CurrentPointDatabase = "currentPoint";
+std::string Message::PointFolderRootName = "Point";
+std::string Message::FunResFolderRootName = "fun";
+std::string Message::FunResRootName = "fun";
+std::string Message::PointResRootName = "point_res_";
 
 //Message
 //-------
@@ -102,9 +112,6 @@ void Message::Initialize(int argc, char *argv[])
   else {if (m_verbosity > 0) Message::Check();}
   Message::BuildGrid();
 
-  //Create result folder (if does not exist)
-  std::string command = "if ! test -d " + m_resDir + "; then mkdir "+ m_resDir+"; fi";
-  system(command.c_str());
 }
 
 

@@ -8,12 +8,27 @@
 class Point{
  private:
   int m_id; //id of the point
+  std::string m_id_str; // id, version string
   std::string m_IdDir;
+  std::string m_myDir;
   double m_xi, m_y;
   std::vector<int> m_MC; //number of simu already done (for each function)
   std::vector<int> m_MC_to_do; //number of simu to do (for each function)
   std::vector<int> m_NResFiles; //number of files already written (for each function)
   std::vector<double> m_average, m_stddev; //current result in memory
+
+  static std::string BackSlash;
+  static std::string DBext;
+  static std::string PointDatabase;
+  static std::string FullResRootName;
+  static std::string CurrentPointDatabase;
+  static std::string FunResFolderRootName;
+  static std::string FunResRootName;
+  static std::string PointFolderRootName;
+  static std::string PointResRootName;
+
+  void WriteOnFile(std::vector<std::vector<double>*> *results);
+
  public:
   Point(int id, double xi, double y);
   Point(Point *p);

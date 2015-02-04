@@ -33,7 +33,7 @@ class Database {
   void BuildFolderPoint(int id); // Create a folder for the point with empty files
   void RebuildPointsDb(); // Rebuild points.db
   void PreparePointsToDo(); // For each points of id in "PointsIdToDo", compute the number of MC to do
-
+  void CheckOrBuildRootFolder(); // Create res folder and basics help files (if not exist)
  public:
   //Constructor
   Database(std::string resdir);
@@ -42,6 +42,8 @@ class Database {
   void Init();
   //Provide an array of pointers to the Points to be treated by the MC solver
   void UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y, std::vector<int> *MC_To_Do);
+ // Launch the MC simulations for every points with id in PointsIdToDo
+  void LaunchMCSimulations();
   int FindPoint(double x, double y);
   Point* GetPointToDo(int index){return Points[PointsIdToDo[index]];}
   Point* GetPoint(int id){return Points[id];}

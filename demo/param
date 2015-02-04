@@ -1,5 +1,5 @@
 resDir = lolom/
-MC_0 = 10
+MC_0 = 12
 MC_1 = 2
 MC_2 = 0
 MC_3 = 10
@@ -13,5 +13,5 @@ xi_min = -5
 xi_max = 5
 y_max = 5
 y_min = 0
-dxi = 5
+dxi = 10
 dy = 5

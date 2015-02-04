@@ -8,20 +8,19 @@
 #include "Message.h"
 #include "Point.h"
 
-std::string Database::DBext = ".db";
-std::string Database::PointDatabase = "Points";
-std::string Database::FullResRootName = "ResFun";
-std::string Database::CurrentPointDatabase = "currentPoint";
-std::string Database::PointFolderRootName = "Point";
-std::string Database::FunResFolderRootName = "fun";
-std::string Database::FunResRootName = "fun";
-std::string Database::PointResRootName = "point_res_";
+std::string Database::DBext = Message::GetDBext();
+std::string Database::PointDatabase = Message::GetPointDatabase();
+std::string Database::FullResRootName = Message::GetFullResRootName();
+std::string Database::CurrentPointDatabase = Message::GetCurrentPointDatabase();
+std::string Database::PointFolderRootName = Message::GetPointFolderRootName();
+std::string Database::FunResFolderRootName = Message::GetFunResFolderRootName();
+std::string Database::FunResRootName = Message::GetFunResRootName();
+std::string Database::PointResRootName = Message::GetPointResRootName();
 
 //Constructor
 Database::Database(std::string resdir){
   m_resDir = resdir;
   NpointsToDo = 0;
-  //  NResByFun.resize(Message::GetNFUN());
 }
 
 Database::~Database(){
@@ -34,11 +33,62 @@ Database::~Database(){
 void Database::Init()
 {
   Message::Info("Init Database...");
+  CheckOrBuildRootFolder();
   //Read folder then subfolder, then ...
   int DbExists = ParseRootFiles();
   if(DbExists)
     ParsePointFiles();
+}
 
+void Database::CheckOrBuildRootFolder()
+{
+  //Create result folder (if does not exist)
+  std::string command = "if ! test -d " + m_resDir + "; then mkdir "+ m_resDir+"; fi";
+  system(command.c_str());
+  std::string helpDir = m_resDir + Message::GetHelpDir();
+  command = "if ! test -d " + helpDir + "; then mkdir "+ helpDir+"; fi";
+  system(command.c_str());
+  //Check help files
+  std::string HelpPointsDbName = Message::GetResDir() + Message::GetHelpDir() +  Message::GetPointDatabase() + Message::GetDBext() + "_help";
+  std::ofstream OutHelpPointsDb(HelpPointsDbName.c_str(), std::ios_base::out);
+  OutHelpPointsDb << "Number of Points" << "\n";
+  OutHelpPointsDb << "Id_0   Xi_0   Y_0" << "\n";
+  OutHelpPointsDb << "Id_1   Xi_1   Y_1" << "\n";
+  OutHelpPointsDb << "Id_2   Xi_2   Y_2" << "\n";
+  OutHelpPointsDb << " .      .      ." << "\n";
+  OutHelpPointsDb << " .      .      ." << "\n";
+  OutHelpPointsDb << " .      .      ." << "\n";
+  OutHelpPointsDb.close();
+
+  std::string PointDir = helpDir + Message::GetPointFolderRootName() + "XX/" ;
+  command = "if ! test -d " + PointDir + "; then mkdir "+ PointDir +"; fi";
+  system(command.c_str());
+  std::string HelpFunXXDbName = PointDir + Message::GetFunResRootName() + "XX" + Message::GetDBext() +"_help";
+  std::ofstream OutHelpFunXXDb(HelpFunXXDbName.c_str(), std::ios_base::out);
+  OutHelpFunXXDb << "Number of \""+ Message::GetPointResRootName() + "XX"+Message::GetDBext() +"\" files in funXX folder (say M)" << "\n";
+  OutHelpFunXXDb << "Total number of MC (Monte Carlo simulations)" << "\n";
+  OutHelpFunXXDb << "Number of MC in file 0" << "\n";
+  OutHelpFunXXDb << "Number of MC in file 1" << "\n";
+  OutHelpFunXXDb << "Number of MC in file 2" << "\n";
+  OutHelpFunXXDb << "           .          " << "\n";
+  OutHelpFunXXDb << "           .          " << "\n";
+  OutHelpFunXXDb << "           .          " << "\n";
+  OutHelpFunXXDb << "Number of MC in file M-1" << "\n";
+  OutHelpFunXXDb.close();
+
+  std::string FunDir = PointDir + Message::GetFunResFolderRootName() + "XX/" ;
+  command = "if ! test -d " + FunDir + "; then mkdir "+ FunDir +"; fi";
+  system(command.c_str());
+  std::string HelpPointResXXDbName = FunDir + Message::GetPointResRootName() + "XX" + Message::GetDBext() +"_help";
+  std::ofstream OutHelpPointResXXDb(HelpPointResXXDbName.c_str(), std::ios_base::out);
+  OutHelpPointResXXDb << "Number of MC (Monte Carlo Simulations) (say M)" << "\n";
+  OutHelpPointResXXDb << "Result 0" << "\n";
+  OutHelpPointResXXDb << "Result 1" << "\n";
+  OutHelpPointResXXDb << "Result 2" << "\n";
+  OutHelpPointResXXDb << "   .    " << "\n";
+  OutHelpPointResXXDb << "   .    " << "\n";
+  OutHelpPointResXXDb << "   .    " << "\n";
+  OutHelpPointResXXDb << "Result M-1" << "\n";
 }
 
 
@@ -166,9 +216,10 @@ void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y,
 	  int ixi = newpointindex[i];
 	  Points[newId] = new Point(newId, (*Xi)[ixi], (*Y)[ixi]);
 	  PointsIdToDo.push_back(newId);
-	  newId++;
 	  //Build folder
 	  BuildFolderPoint(newId);
+	  //Increase NewId size
+	  newId++;
 	}
       //Update points.db
       RebuildPointsDb();
@@ -256,6 +307,18 @@ int Database::FindPoint(double xi, double y)
     }
   return -1;
 }
+
+void Database::LaunchMCSimulations()
+{
+  Message::Info("LaunchMCSimulations...");
+  int npToDo = PointsIdToDo.size();
+  for (int iP =0 ; iP < npToDo; iP++)
+    {
+      int id = PointsIdToDo[iP];
+      Points[id]->LaunchMC();
+    }
+}
+
 
 void Database::PrintPoints(){
   Message::Info("PrintPoints...");

@@ -11,7 +11,7 @@ class Message{
   static int m_Pos; // Only (re-)compute average/std deviation ?
   static int m_Gmsh;  // Print on Gmsh file
   static std::string m_paramFile;
-  static std::string m_resDir;
+  static std::string m_resDir, m_helpDir;
   static int m_verbosity;
   static int m_myRank, m_nb_proc;
   //---------------------------
@@ -41,7 +41,18 @@ class Message{
   //Grid dimension and grid
   static double m_xi_min, m_xi_max, m_dxi, m_y_min, m_y_max, m_dy;
   static std::vector<double> m_xi, m_y;
-
+  //-----------------------------
+  //File/Folder Names
+  //-----------------------------
+  static std::string DBext;
+  static std::string PointDatabase;
+  static std::string FullResRootName;
+  static std::string CurrentPointDatabase;
+  static std::string FunResFolderRootName;
+  static std::string FunResRootName;
+  static std::string PointFolderRootName;
+  static std::string PointResRootName;
+  //Usefull functions
   static void BuildGrid();
 
  public:
@@ -60,6 +71,7 @@ class Message{
   static int GetGmsh(){return m_Gmsh;};
   static const int GetNFUN(){return m_NFUN;};
   static std::string GetResDir(){return m_resDir;};
+  static std::string GetHelpDir(){return m_helpDir;};
   static std::vector<double>* GetGridXi(){return &m_xi;}
   static std::vector<double>* GetGridY(){return &m_y;}
   static std::vector<int>* GetDesiredMC(){return &m_desired_MC;}
@@ -83,6 +95,19 @@ class Message{
   static double GetSdt(){return m_sdt;};
   //MPI DISTRIBUTER
   static void DistributeWork(int nPointToDo, std::vector<int> *IndexOfPointToDo);
+  //========================
+  // FILE/FOLDER NAMES...
+  //========================
+  //Get String...
+  static std::string GetDBext(){return DBext;}
+  static std::string GetPointDatabase(){ return PointDatabase;}
+  static std::string GetFullResRootName(){ return FullResRootName;}
+  static std::string GetCurrentPointDatabase(){ return CurrentPointDatabase;}
+  static std::string GetPointFolderRootName(){ return PointFolderRootName;}
+  static std::string GetFunResFolderRootName(){ return FunResFolderRootName;}
+  static std::string GetFunResRootName(){ return FunResRootName;}
+  static std::string GetPointResRootName(){ return PointResRootName;}
+
 };
 
 #endif

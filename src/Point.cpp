@@ -280,7 +280,7 @@ void Point::PostProcessing(int ifun)
   iifun << ifun;
   std::string rootFunFolder = FunResFolderRootName + iifun.str() + BackSlash;
   //Prepare vector and values...
-  double average, stddev;
+  double average =0., stddev=0.;
   std::vector<double> results;
   results.reserve(m_MC[ifun]);
   int nfiles = m_NResFiles[ifun];

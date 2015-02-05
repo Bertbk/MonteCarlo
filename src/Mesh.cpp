@@ -24,14 +24,29 @@ Mesh::Mesh(std::vector<double> X,  std::vector<double> Y)
     }
   m_X.resize(npx);
   m_Y.resize(npx);
+  m_Z.resize(npx);
   for(int i = 0; i< npx; i++)
     {
       m_X[i] = X[i];
       m_Y[i] = Y[i];
+      m_Z[i] = 0;
     }
   //juste in case of ...
   m_connectivity.reserve(npx*4);
+  /*  m_res.resize(Message::GetNFUN());
+  for (int i =0; i<Message::GetNFUN();i++)
+  m_res[i].resize(npx);*/
 }
+
+void Mesh::SetRes(std::vector<std::vector<double> > *res)
+{
+  /*  int npx = m_X.size();
+  for (int ifun =0; i<Message::GetNFUN();i++)
+      for(int i = 0; i< npx; i++)
+      m_res[ifun][i] = res[ifun][i];*/
+  m_res = res;
+}
+
 
 void Mesh::Update()
 {
@@ -49,8 +64,6 @@ void Mesh::Update()
   int Npoints = m_X.size();
   for(int i = 4; i < Npoints; i++)
     {
-      if(IsAVertex(i))
-	continue;
       std::vector<int> res;
       IsOnAnEdge(i, &res);
       int sizeres = res.size();
@@ -112,27 +125,6 @@ void Mesh::ReArrange()
       m_Y[cpt] = YY[ind_border[i]];
       cpt++;
     }
-}
-
-
-void Mesh::PrintGMSH(std::string Filename)
-{
-  int Npoints = m_X.size();
-  std::ofstream file(Filename.c_str());
-  file << "$MeshFormat"<< std::endl;
-  file << "2.2 0 8"<< std::endl;
-  file << "$EndMeshFormat"<< std::endl;
-  file << "$Nodes"<< std::endl;
-  file << Npoints<< std::endl;
-  for (int i = 0; i < Npoints; i++)
-    file << i+1 << " " <<m_X[i] << " " << m_Y[i]<< " 0" << std::endl;
-  file << "$EndNodes"<< std::endl;
-  file << "$Elements"<< std::endl;
-  file << m_connectivity.size()<< std::endl;
-  for(int i = 0; i < m_connectivity.size(); i++)
-    file << i+1 << " 2 2 1 1 " << m_connectivity[i][0]+1 << " " << m_connectivity[i][1]+1<< " " << m_connectivity[i][2]+1<< std::endl;
-  file << "$EndElements"<< std::endl;
-  file.close();
 }
 
 void Mesh::SeparatePoints(std::vector<int> *ind_corner, std::vector<int> *ind_interior, std::vector<int> *ind_border)
@@ -238,7 +230,8 @@ void Mesh::IsOnAnEdge(int ind, std::vector<int > *res)
 bool Mesh::IsAligned(double x0, double y0, double x1, double y1, double x2, double y2)
 {
   double Area = abs(0.5*(-y1*x2 + y0*(-x1 + x2) + x0*(y1 - y2) + x1*y2));
-  return (Area==0);
+  double scalar_product = (x1-x0)*(x2-x0) + (y1-y0)*(y2-y0);
+  return (Area==0 && scalar_product <=0);
 }
 
 bool Mesh::IsAVertex(int ind)
@@ -281,14 +274,64 @@ void Mesh::SplitTriangleFromEdge(int iTriangle, int Vertex, int iPoint)
   int connSize = m_connectivity.size();
   m_connectivity.resize(connSize + 1);
   int a,b,c;
-  a = m_connectivity[iTriangle][(Vertex-1)%3];
-  b = m_connectivity[iTriangle][(Vertex)%3];
-  c = m_connectivity[iTriangle][(Vertex+1)%3];
+  a = m_connectivity[iTriangle][Vertex];
+  b = m_connectivity[iTriangle][(Vertex+1)%3];
+  c = m_connectivity[iTriangle][(Vertex+2)%3];
   m_connectivity[iTriangle][0] = a;
-  m_connectivity[iTriangle][1] = b;
-  m_connectivity[iTriangle][2] = iPoint;
+  m_connectivity[iTriangle][1] = iPoint;
+  m_connectivity[iTriangle][2] = b;
   m_connectivity[connSize].resize(3);
-  m_connectivity[connSize][0] = b;
-  m_connectivity[connSize][1] = c;
-  m_connectivity[connSize][2] = iPoint;
+  m_connectivity[connSize][0] = iPoint;
+  m_connectivity[connSize][1] = a;
+  m_connectivity[connSize][2] = c;
+}
+
+
+
+void Mesh::PrintMesh(std::string Filename)
+{
+  int Npoints = m_X.size();
+  std::ofstream file((Filename +".msh").c_str());
+  file << "$MeshFormat"<< std::endl;
+  file << "2.2 0 8"<< std::endl;
+  file << "$EndMeshFormat"<< std::endl;
+  file << "$Nodes"<< std::endl;
+  file << Npoints<< std::endl;
+  for (int i = 0; i < Npoints; i++)
+    file << i+1 << " " <<m_X[i] << " " << m_Y[i]<< " 0" << std::endl;
+  file << "$EndNodes"<< std::endl;
+  file << "$Elements"<< std::endl;
+  file << m_connectivity.size()<< std::endl;
+  for(int i = 0; i < m_connectivity.size(); i++)
+    file << i+1 << " 2 2 1 1 " << m_connectivity[i][0]+1 << " " << m_connectivity[i][1]+1<< " " << m_connectivity[i][2]+1<< std::endl;
+  file << "$EndElements"<< std::endl;
+  file.close();
+}
+
+
+void Mesh::PrintRes(std::string RootFileName)
+{
+  int iTri = m_connectivity.size();
+  for (int ifun = 0; ifun < Message::GetNFUN(); ifun++)
+    {
+      std::stringstream iifun;
+      iifun << ifun;
+      std::string FileName = RootFileName + iifun.str() + ".pos";
+      std::ofstream posFile(FileName.c_str(), std::ios_base::out);
+      posFile << "View \"res\" {"<< "\n";
+
+      for (int iT = 0; iT < iTri; iT++)
+	{
+	  int a = m_connectivity[iT][0];
+	  int b = m_connectivity[iT][1];
+	  int c = m_connectivity[iT][2];
+	  posFile << "ST(" << m_X[a] <<","<< m_Y[a] << "," << m_Z[a];
+	  posFile << "," << m_X[b] <<","<< m_Y[b] << "," << m_Z[b];
+	  posFile << "," << m_X[c] <<","<< m_Y[c] << "," << m_Z[c];
+	  posFile << "){";
+	  posFile << (*m_res)[ifun][a]  << ","<<(*m_res)[ifun][b]<< ","<<(*m_res)[ifun][c] << ",0,0,0};\n";
+	}
+      posFile << "};\n";
+      posFile.close();
+    }
 }

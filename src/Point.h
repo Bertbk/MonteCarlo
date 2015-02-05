@@ -49,7 +49,7 @@ class Point{
   void SetMCToDo(std::vector<int> *desired_MC); // Set the right MC_to_do, by comparing (differencing) m_MC and m_Desired_MC...
   void LaunchMC();
   void ShortCyclePlus(std::vector<double> *integrals);
-  void PostProcessing(int ifun);
+  void PostProcessing(int ifun); // Read all the results, compute the average and standard dev
   //double uniform(){return (1+2)/(1+(double)RAND_MAX);   }
   static double uniform(){return (1+(double)rand())/(1+(double)RAND_MAX);   }
   static double gauss(){return sqrt(-2.*log(uniform()))*cos(Message::GetDeuxPi()*uniform());}

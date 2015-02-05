@@ -6,6 +6,7 @@
 
 #include "Database.h"
 #include "Message.h"
+#include "Mesh.h"
 #include "Point.h"
 
 std::string Database::DBext = Message::GetDBext();
@@ -406,11 +407,35 @@ void Database::PostProcessing(){
 }
 
 
-void Database::PostProcessingGMSH()
+void Database::ExtractXYRes(std::vector<double> *Xi,std::vector<double> *Y,std::vector<std::vector<double> > *res)
+{
+  int np = Points.size();
+  Xi->resize(np);
+  Y->resize(np);
+  res->resize(Message::GetNFUN());
+  for (int ifun = 0; ifun < Message::GetNFUN(); ifun++)
+    (*res)[ifun].resize(np);
+  for (int iP=0; iP < np; iP++)
+    {
+      Point *p = Points[iP];
+      (*Xi)[iP] = p->GetXi();
+      (*Y)[iP] = p->GetY();
+      for (int ifun = 0; ifun < Message::GetNFUN(); ifun++)
+	(*res)[ifun][iP] = p->GetAverage(ifun);
+    }
+}
+
+void Database::PrintPOS(std::string FileName)
 {
   //Rebuild Database to be sure to have the last informations
-  
-  
-  
-  
+  std::vector<double> Xi;
+  std::vector<double> Y;
+  std::vector<std::vector<double> > res;
+
+  ExtractXYRes(&Xi, &Y, &res);
+  Mesh myMesh(Xi, Y);
+  myMesh.SetRes(&res);
+  myMesh.Update();
+  myMesh.PrintRes(Message::GetResDir()+FileName);
+  myMesh.PrintMesh(Message::GetResDir()+"lol");
 }

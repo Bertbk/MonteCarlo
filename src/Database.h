@@ -49,11 +49,13 @@ class Database {
   // Launch the MC simulations for every points with id in PointsIdToDo
   void LaunchMCSimulations();
   // Post Processing
-  void PostProcessing();
-  void PostProcessingGMSH();
+  void PostProcessing(); // Read files
+  void PrintPOS(std::string FileName);
   int FindPoint(double x, double y);
   Point* GetPointToDo(int index){return Points[PointsIdToDo[index]];}
   Point* GetPoint(int id){return Points[id];}
+  //Extract and set on X,Y and res the coordinates X and Y of the points and the result (average ?)
+  void ExtractXYRes(std::vector<double> *X,std::vector<double> *Y,std::vector<std::vector<double> > *res);
   //Print information on every points
   void PrintPoints();
 

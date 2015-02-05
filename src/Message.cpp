@@ -27,6 +27,7 @@ int Message::m_ComputeMC = 0;
 int Message::m_Pos = 0;
 int Message::m_Gmsh = 0;
 int Message::m_verbosity = 4;
+std::string Message::GMSHFileName = "res";
 int Message::m_myRank = 0;
 int Message::m_nb_proc = 1;
 //PARAMETERS
@@ -98,6 +99,7 @@ void Message::Initialize(int argc, char *argv[])
 		else if (!strcmp(argv[i] + 1, "par")) { m_paramFile = argv[i + 1]; i += 2; showHelp = 0; }
 		else if (!strcmp(argv[i] + 1, "MC"))  { m_ComputeMC = 1; i++; showHelp = 0; }
 		else if (!strcmp(argv[i] + 1, "pos")) { m_Pos = 1; i++; showHelp = 0; }
+		else if (!strcmp(argv[i] + 1, "gmsh")) { m_Gmsh = 1; GMSHFileName = argv[i + 1]; i+=2; showHelp = 0; }
 		else{ Warning("What the hell is this option (skipping) ? (%s)", argv[i] + 1); i++; }
 	}
 	else{ Warning("What the hell is this option (skipping) ? (%s)", argv[i]); i++; }
@@ -208,6 +210,7 @@ void Message::Help()
   std::cout << "  -v num              Set verbosity level (default = 4)\n";
   std::cout << "  -MC                 Launch the Monte Carlo computations\n";
   std::cout << "  -pos                Launch the Post Processing (can be used together with -MC or standalone)\n";
+  std::cout << "  -gmsh  FILENAME     Print result on FILENAM.pos file (in the right folder) \n";
 }
 
 // Check the result of parsing the param file

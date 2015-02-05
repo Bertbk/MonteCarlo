@@ -18,6 +18,7 @@
   #include<omp.h>*/
 
 #include "Message.h"
+#include "Mesh.h"
 #include "Point.h"
 #include "Database.h"
 

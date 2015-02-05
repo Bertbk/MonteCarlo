@@ -26,6 +26,7 @@ endif(HAVE_MPI)
 
 add_executable(MonteCarlo
 Message.cpp
+Mesh.cpp
 Point.cpp
 Database.cpp
 Main_Monte.cpp)

@@ -50,20 +50,32 @@ void Mesh::SetRes(std::vector<std::vector<double> > *res)
 
 void Mesh::Update()
 {
-  ReArrange();
+  //Separate corners, border and interior points.
+  std::vector<int> ind_corner, ind_interior, ind_border;
+  SeparatePoints(&ind_corner, &ind_interior, &ind_border);
 
   m_connectivity.resize(2);
   m_connectivity[0].resize(3);
-  m_connectivity[0][0] = 0;
-  m_connectivity[0][1] = 1;
-  m_connectivity[0][2] = 2;
+  m_connectivity[0][0] = ind_corner[0];
+  m_connectivity[0][1] = ind_corner[1];
+  m_connectivity[0][2] = ind_corner[2];
   m_connectivity[1].resize(3);
-  m_connectivity[1][0] = 0;
-  m_connectivity[1][1] = 2;
-  m_connectivity[1][2] = 3;
+  m_connectivity[1][0] = ind_corner[0];
+  m_connectivity[1][1] = ind_corner[2];
+  m_connectivity[1][2] = ind_corner[3];
   int Npoints = m_X.size();
-  for(int i = 4; i < Npoints; i++)
+  //The loop is done first on the interior points and then on the border points.
+  //The corners points will never "move"
+  int nPointsToStudy = ind_interior.size() + ind_border.size();
+  std::vector<int> order;
+  order.reserve(nPointsToStudy);
+  order.insert(order.end(), ind_interior.begin(), ind_interior.end() );
+  order.insert(order.end(), ind_border.begin(), ind_border.end() );
+  for(int ii = 0; ii < nPointsToStudy; ii++)
     {
+      int i = order[ii];
+      Message::Debug("i = %d", i);
+      Message::Debug("X[i] = %g Y[i] = %g", m_X[i],m_Y[i]);
       std::vector<int> res;
       IsOnAnEdge(i, &res);
       int sizeres = res.size();
@@ -84,48 +96,6 @@ void Mesh::Update()
 }
 
 
-void Mesh::ReArrange()
-{
-  std::vector<int> ind_corner, ind_interior, ind_border;
-  SeparatePoints(&ind_corner, &ind_interior, &ind_border);
-  int ncorner = ind_corner.size(), ninterior = ind_interior.size(),nborder = ind_border.size();
-  //Auxiliary table
-  std::vector<double> XX, YY;
-  int npoints = m_X.size();
-  XX.resize(npoints);
-  YY.resize(npoints);
-  for(int i =0; i< npoints; i++)
-    {
-      XX[i] = m_X[i];
-      YY[i] = m_Y[i];
-      m_X[i] = 0;
-      m_Y[i] = 0;
-    }
-  int cpt = 0;
-  if(ncorner !=4)
-    {
-    Message::Warning("Huge problem, no 4 corners found !! Abording Mesh computation...");
-    return;
-    }
-  for (int i =0; i < ncorner; i++)
-    {
-      m_X[cpt] = XX[ind_corner[i]];
-      m_Y[cpt] = YY[ind_corner[i]];
-      cpt++;
-    }
-  for (int i =0; i < ninterior; i++)
-    {
-      m_X[cpt] = XX[ind_interior[i]];
-      m_Y[cpt] = YY[ind_interior[i]];
-      cpt++;
-    }
-  for (int i =0; i < nborder; i++)
-    {
-      m_X[cpt] = XX[ind_border[i]];
-      m_Y[cpt] = YY[ind_border[i]];
-      cpt++;
-    }
-}
 
 void Mesh::SeparatePoints(std::vector<int> *ind_corner, std::vector<int> *ind_interior, std::vector<int> *ind_border)
 {
@@ -232,17 +202,6 @@ bool Mesh::IsAligned(double x0, double y0, double x1, double y1, double x2, doub
   double Area = abs(0.5*(-y1*x2 + y0*(-x1 + x2) + x0*(y1 - y2) + x1*y2));
   double scalar_product = (x1-x0)*(x2-x0) + (y1-y0)*(y2-y0);
   return (Area==0 && scalar_product <=0);
-}
-
-bool Mesh::IsAVertex(int ind)
-{
-  int nT = m_connectivity.size();
-  for (int i = 0; i < nT; i++)
-    {
-      if(m_connectivity[i][0]==ind ||m_connectivity[i][1]==ind ||m_connectivity[i][2]==ind)
-	return true;
-    }
-  return false;
 }
 
 void Mesh::SplitTriangle(int iTriangle, int iPoint)

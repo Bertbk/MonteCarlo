@@ -3,7 +3,6 @@
 
 #include <string>
 
-
 // a class to manage messages
 class Message{
  private:

@@ -1,14 +1,14 @@
 #include <iostream>
 #include <fstream>
 #include <sstream> //for osstream
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <vector>
-#include <time.h>
-#include <stdarg.h>
-#include <math.h>
 #include <string.h>
 #include <string>
+#include <vector>
+#include <time.h>
+#include <math.h>
 #include <algorithm> //for remove_if, isspace
 
 #include "Message.h"
@@ -17,7 +17,7 @@
 #include <mpi.h>
 #endif
 
-#if defined(WITH_OMP)
+#if defined(HAVE_OMP)
 #include "omp.h"
 #endif
 
@@ -82,7 +82,9 @@ void Message::Initialize(int argc, char *argv[])
   if(m_myRank == 0)
     Message::Info("Launched with MPI (%d processes)", m_nb_proc);
 #endif
-#if defined(WITH_OMP)
+  //Seed of rand function
+  srand(time(NULL) - 360000*m_myRank);
+#if defined(HAVE_OMP)
 #pragma omp parallel
   {
   m_nb_threads = omp_get_num_threads();

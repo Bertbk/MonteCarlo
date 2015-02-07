@@ -53,7 +53,7 @@ void Mesh::Update()
   //Separate corners, border and interior points.
   std::vector<int> ind_corner, ind_interior, ind_border;
   SeparatePoints(&ind_corner, &ind_interior, &ind_border);
-
+  //First, the envelopping rectangle is split in two triangles
   m_connectivity.resize(2);
   m_connectivity[0].resize(3);
   m_connectivity[0][0] = ind_corner[0];
@@ -74,11 +74,10 @@ void Mesh::Update()
   for(int ii = 0; ii < nPointsToStudy; ii++)
     {
       int i = order[ii];
-      Message::Debug("i = %d", i);
-      Message::Debug("X[i] = %g Y[i] = %g", m_X[i],m_Y[i]);
       std::vector<int> res;
       IsOnAnEdge(i, &res);
       int sizeres = res.size();
+      //If the point is on an edge of one or two triangles then split it (or them)
       if(sizeres>0)
 	{
 	  for (int j = 0 ; j < sizeres; j+=2)
@@ -87,6 +86,7 @@ void Mesh::Update()
 	  continue;
 	}
       int iTri = IsInATriangle(i);
+      //Or if the point is inside a triangle, split the triangle in three pieces
       if(iTri > -1)
 	{
 	  SplitTriangle(iTri, i);

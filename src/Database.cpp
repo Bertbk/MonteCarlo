@@ -359,6 +359,8 @@ void Database::PrintPoints(){
 }
 
 void Database::PostProcessing(){
+  if(Message::RootMpi())
+    Message::Info("Post-Processing...");
   int NFUN = Message::GetNFUN();
   for (int ifun =0; ifun < NFUN; ifun ++)
     {
@@ -427,6 +429,8 @@ void Database::ExtractXYRes(std::vector<double> *Xi,std::vector<double> *Y,std::
 
 void Database::PrintPOS(std::string FileName)
 {
+  if(!Message::RootMpi())
+    return;
   //Rebuild Database to be sure to have the last informations
   std::vector<double> Xi;
   std::vector<double> Y;

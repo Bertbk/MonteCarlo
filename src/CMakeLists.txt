@@ -31,6 +31,8 @@ Point.cpp
 Database.cpp
 Main_Monte.cpp)
 
+include_directories(${CMAKE_SOURCE_DIR})
+
 if(HAVE_MPI)
 target_link_libraries(MonteCarlo ${MPI_CXX_LIBRARIES})
 endif(HAVE_MPI)

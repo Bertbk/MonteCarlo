@@ -280,7 +280,7 @@ void Point::PostProcessing(int ifun)
       std::stringstream iifile;
       iifile << ifile;
       std::string point_resXXName = m_myDir + rootFunFolder + Message::GetPointResRootName() + iifile.str() + Message::GetDBext(); 
-      ifstream point_resXX(point_resXXName.c_str(), std::ios_base::in);
+      std::ifstream point_resXX(point_resXXName.c_str(), std::ios_base::in);
       if(!point_resXX.is_open()){
 	Message::Warning("Could not open %s, abording...", point_resXXName.c_str());
 	Message::Finalize(EXIT_FAILURE);

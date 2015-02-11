@@ -11,7 +11,7 @@
 #include <math.h>
 #include <algorithm> //for remove_if, isspace
 
-#include "Message.h"
+#include "MonteCarlo/Message.h"
 
 #if defined(HAVE_MPI)
 #include <mpi.h>

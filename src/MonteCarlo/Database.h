@@ -5,25 +5,14 @@
 #include <string>
 #include <math.h>
 #include <algorithm>
-#include "Message.h"
-#include "Point.h"
+#include "MonteCarlo/Message.h"
+#include "MonteCarlo/Point.h"
 
 class Database {
  private:
   std::string m_resDir;
-  //  std::vector <std::vector < int > > NResByFun; // Number of results per function (per points)
   std::vector <Point*> Points;
   std::vector <int>    PointsIdToDo; // Id of the points to do
-  static std::string DBext;
-  static std::string POSext;
-  static std::string PointDatabase;
-  static std::string FullResRootName;
-  static std::string CurrentPointDatabase;
-  static std::string FunResFolderRootName;
-  static std::string FunResRootName;
-  static std::string PointFolderRootName;
-  static std::string PointResRootName;
-  static std::string BackSlash;
   int NpointsToDo;
 
   //Parse the Root files: points.db, resfunXX.db, ...

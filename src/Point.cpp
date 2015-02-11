@@ -7,24 +7,13 @@
 #include <sstream> //for osstream
 #include <algorithm>
 
-#include "Message.h"
-#include "Point.h"
+#include "MonteCarlo/Message.h"
+#include "MonteCarlo/Point.h"
 
 #ifdef HAVE_MPI
 #include<mpi.h>
 #endif
-using namespace std;
 
-
-std::string Point::BackSlash = Message::GetBackSlash();
-std::string Point::DBext = Message::GetDBext();
-std::string Point::PointDatabase = Message::GetPointDatabase();
-std::string Point::FullResRootName = Message::GetFullResRootName();
-std::string Point::CurrentPointDatabase = Message::GetCurrentPointDatabase();
-std::string Point::PointFolderRootName = Message::GetPointFolderRootName();
-std::string Point::FunResFolderRootName = Message::GetFunResFolderRootName();
-std::string Point::FunResRootName = Message::GetFunResRootName();
-std::string Point::PointResRootName = Message::GetPointResRootName();
 const int Point::m_NQuantities = 5;
 
 
@@ -41,7 +30,7 @@ Point::Point(int id, double xi, double y){
   std::stringstream iid;
   iid << m_id;
   m_id_str = iid.str();
-  m_myDir = Message::GetResDir() + PointFolderRootName + m_id_str + BackSlash;
+  m_myDir = Message::GetResDir() + Message::GetPointFolderRootName() + m_id_str + Message::GetBackSlash();
 }
 
 Point::Point(Point *p){
@@ -114,11 +103,11 @@ void Point::LaunchMC()
   int Restart = Message::GetRestart();
   if(Restart <= 0)
     Restart = MC_MAX;
-  int irestart_end = MC_MAX/Restart + min(1, MC_MAX%Restart);
+  int irestart_end = MC_MAX/Restart + std::min(1, MC_MAX%Restart);
   for (int irestart = 0; irestart < irestart_end; irestart ++)
     {
       int MC_start = irestart*Restart;
-      int MC_end = min(MC_MAX, (irestart + 1)*Restart);
+      int MC_end = std::min(MC_MAX, (irestart + 1)*Restart);
       int MC_currentLoop;
       // NFUN vectors of different sizes containing the results...
       std::vector<std::vector<double>* > resultsMC(NFUN);
@@ -221,8 +210,8 @@ void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
       std::ostringstream osifun, osiNbFiles;
       osifun << ifunId;
       osiNbFiles << m_NResFiles[ifunId];
-      std::string resFileName = m_myDir + FunResFolderRootName + osifun.str() + BackSlash + PointResRootName + osiNbFiles.str()  + DBext;
-      fRes[ifunAux] = new ofstream(resFileName.c_str(), std::ios_base::out); 
+      std::string resFileName = m_myDir + Message::GetFunResFolderRootName() + osifun.str() + Message::GetBackSlash() + Message::GetPointResRootName() + osiNbFiles.str()  + Message::GetDBext();
+      fRes[ifunAux] = new std::ofstream(resFileName.c_str(), std::ios_base::out); 
       if(!fRes[ifunAux]->is_open()) Message::Warning("Problem opening file \"%s\"", resFileName.c_str());
     }
 
@@ -257,7 +246,7 @@ void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
       int ifunId = FunWithNewResults[ifunAux];
       std::ostringstream osifun;
       osifun << ifunId;
-      std::string funXXName = m_myDir + FunResRootName +osifun.str() + DBext;
+      std::string funXXName = m_myDir + Message::GetFunResRootName() +osifun.str() + Message::GetDBext();
       std::string commandBACKUP = "cp " + funXXName + " " + funXXName + "_backup";
       system(commandBACKUP.c_str());
       std::ofstream funXX(funXXName.c_str(), std::ios_base::out);
@@ -278,7 +267,7 @@ void Point::PostProcessing(int ifun)
   //Folder name
   std::stringstream iifun;
   iifun << ifun;
-  std::string rootFunFolder = FunResFolderRootName + iifun.str() + BackSlash;
+  std::string rootFunFolder = Message::GetFunResFolderRootName() + iifun.str() + Message::GetBackSlash();
   //Prepare vector and values...
   double average =0., stddev=0.;
   std::vector<double> results;
@@ -290,7 +279,7 @@ void Point::PostProcessing(int ifun)
     {
       std::stringstream iifile;
       iifile << ifile;
-      std::string point_resXXName = m_myDir + rootFunFolder + PointResRootName + iifile.str() + DBext; 
+      std::string point_resXXName = m_myDir + rootFunFolder + Message::GetPointResRootName() + iifile.str() + Message::GetDBext(); 
       ifstream point_resXX(point_resXXName.c_str(), std::ios_base::in);
       if(!point_resXX.is_open()){
 	Message::Warning("Could not open %s, abording...", point_resXXName.c_str());

@@ -4,21 +4,10 @@
 #include <vector>
 #include <string>
 
-#include "Database.h"
-#include "Message.h"
-#include "Mesh.h"
-#include "Point.h"
-
-std::string Database::DBext = Message::GetDBext();
-std::string Database::POSext = Message::GetPOSext();
-std::string Database::PointDatabase = Message::GetPointDatabase();
-std::string Database::FullResRootName = Message::GetFullResRootName();
-std::string Database::CurrentPointDatabase = Message::GetCurrentPointDatabase();
-std::string Database::PointFolderRootName = Message::GetPointFolderRootName();
-std::string Database::FunResFolderRootName = Message::GetFunResFolderRootName();
-std::string Database::FunResRootName = Message::GetFunResRootName();
-std::string Database::PointResRootName = Message::GetPointResRootName();
-std::string Database::BackSlash = Message::GetBackSlash();
+#include "MonteCarlo/Database.h"
+#include "MonteCarlo/Message.h"
+#include "MonteCarlo/Mesh.h"
+#include "MonteCarlo/Point.h"
 
 //Constructor
 Database::Database(std::string resdir){
@@ -102,7 +91,7 @@ int Database::ParseRootFiles(){
   Message::Info("ParseRootFiles...");
   //The root directory should have a file points.db and N_FUN files res_funXX.db
   //points.db: contains information about the points (Id, X, Y)
-  std::string PointsDbName = Message::GetResDir() + PointDatabase + DBext;
+  std::string PointsDbName = Message::GetResDir() + Message::GetPointDatabase() + Message::GetDBext();
   std::ifstream PointsDb(PointsDbName.c_str(), std::ios_base::in);
   if(!PointsDb.is_open())
     {
@@ -138,7 +127,7 @@ void Database::ParsePointFiles(){
     {
       std::stringstream iiPoint;
       iiPoint << iPoint;
-      std::string PointFolder = Message::GetResDir() + PointFolderRootName + iiPoint.str() + BackSlash;
+      std::string PointFolder = Message::GetResDir() + Message::GetPointFolderRootName() + iiPoint.str() + Message::GetBackSlash();
       //Create - if not exist - the foler file
       std::string command_PointFolder = "if ! test -d " + PointFolder + "; then mkdir "+ PointFolder+"; fi";
       system(command_PointFolder.c_str());
@@ -148,16 +137,16 @@ void Database::ParsePointFiles(){
 	  std::stringstream iifun;
 	  iifun << ifun;
 	  //Check if folder exists
-	  std::string FunFolder = PointFolder + FunResFolderRootName + iifun.str();
+	  std::string FunFolder = PointFolder + Message::GetFunResFolderRootName() + iifun.str();
 	  std::string command_FunFolder = "if ! test -d " + FunFolder + "; then mkdir "+ FunFolder+"; fi";
 	  system(command_FunFolder.c_str());
 	  //Read summary file funXX.db
-	  std::string FunFileName = PointFolder + FunResRootName + iifun.str() + DBext;
+	  std::string FunFileName = PointFolder + Message::GetFunResRootName() + iifun.str() + Message::GetDBext();
 	  //Open file
 	  std::ifstream FunDb(FunFileName.c_str(), std::ios_base::in);
 	  if(!FunDb.is_open())
 	    {
-	      Message::Warning("No %s for Point %d and function %d found... Building empty file", FunResRootName.c_str(), iPoint, ifun);
+	      Message::Warning("No %s for Point %d and function %d found... Building empty file", Message::GetFunResRootName().c_str(), iPoint, ifun);
 	      std::ofstream FunDbWrite(FunFileName.c_str(), std::ios_base::out);
 	      FunDbWrite << 0 << std::endl; // MC done (total)
 	      FunDbWrite << 0 << std::endl; // N files
@@ -245,7 +234,7 @@ void Database::BuildFolderPoint(int id)
     return;  
   std::stringstream iiPoint;
   iiPoint << id;
-  std::string PointFolder = Message::GetResDir() + PointFolderRootName + iiPoint.str() + BackSlash;
+  std::string PointFolder = Message::GetResDir() + Message::GetPointFolderRootName() + iiPoint.str() + Message::GetBackSlash();
   //Create - if not exist - the foler file
   std::string command_PointFolder = "if ! test -d " + PointFolder + "; then mkdir "+ PointFolder+"; fi";
   system(command_PointFolder.c_str());
@@ -254,10 +243,10 @@ void Database::BuildFolderPoint(int id)
       std::stringstream iifun;
       iifun << ifun;
       //Check if folder exists
-      std::string FunFolder = PointFolder + FunResFolderRootName + iifun.str();
+      std::string FunFolder = PointFolder + Message::GetFunResFolderRootName() + iifun.str();
       std::string command_FunFolder = "if ! test -d " + FunFolder + "; then mkdir "+ FunFolder+"; fi";
       system(command_FunFolder.c_str());
-      std::string FunFileName = PointFolder + FunResRootName + iifun.str() + DBext;
+      std::string FunFileName = PointFolder + Message::GetFunResRootName() + iifun.str() + Message::GetDBext();
       std::ifstream FunDb(FunFileName.c_str(), std::ios_base::in);
       if(FunDb.is_open())
 	{
@@ -281,10 +270,10 @@ void Database::RebuildPointsDb()
   Message::Info("RebuildPointsDb...");
   //Backup file
   std::string backupcommand;
-  backupcommand = "cp " + Message::GetResDir() + PointDatabase + DBext + Message::GetResDir() + PointDatabase + DBext + "BACKUP"; 
+  backupcommand = "cp " + Message::GetResDir() + Message::GetPointDatabase() + Message::GetDBext() + Message::GetResDir() + Message::GetPointDatabase() + Message::GetDBext() + "BACKUP"; 
   system(backupcommand.c_str());
   //Open file: write (eraze)
-  std::string PointsDbName = Message::GetResDir() + PointDatabase + DBext;
+  std::string PointsDbName = Message::GetResDir() + Message::GetPointDatabase() + Message::GetDBext();
   std::ofstream Pointsdb(PointsDbName.c_str(), std::ios_base::out);
   Pointsdb << Points.size() << std::endl;
   //Write all points
@@ -292,7 +281,7 @@ void Database::RebuildPointsDb()
       Pointsdb << Points[i]->GetId() << " " << Points[i]->GetXi() << " " << Points[i]->GetY() << std::endl;      
   Pointsdb.close();
   //Delete backup file
-  backupcommand = "rm " + Message::GetResDir() + PointDatabase + DBext + "BACKUP"; 
+  backupcommand = "rm " + Message::GetResDir() + Message::GetPointDatabase() + Message::GetDBext() + "BACKUP"; 
   system(backupcommand.c_str());
 }
 
@@ -367,7 +356,7 @@ void Database::PostProcessing(){
       //Folder name
       std::stringstream iifun;
       iifun << ifun;
-      std::string rootFunFolder = FunResFolderRootName + iifun.str() + BackSlash;
+      std::string rootFunFolder = Message::GetFunResFolderRootName() + iifun.str() + Message::GetBackSlash();
       //This loop is parallelizable (MPI)
       int nPToPos = Points.size();
       int myRank = Message::GetRank();
@@ -398,7 +387,7 @@ void Database::PostProcessing(){
       if(Message::RootMpi())
 	{
 	  //Write on files !
-	  std::string funXXName = Message::GetResDir() + FunResRootName +iifun.str() + POSext;
+	  std::string funXXName = Message::GetResDir() + Message::GetFunResRootName() +iifun.str() + Message::GetPOSext();
 	  std::ofstream funXX(funXXName.c_str(), std::ios_base::out);
 	  funXX << Points.size() << "\n";
 	  for (int iP = 0; iP < Points.size(); iP++)

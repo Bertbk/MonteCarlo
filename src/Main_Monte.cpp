@@ -8,10 +8,10 @@
 #include <stdio.h>
 #include <vector>
 
-#include "Message.h"
-#include "Mesh.h"
-#include "Point.h"
-#include "Database.h"
+#include "MonteCarlo/Message.h"
+#include "MonteCarlo/Mesh.h"
+#include "MonteCarlo/Point.h"
+#include "MonteCarlo/Database.h"
 
 
 int main(int argc, char *argv[])

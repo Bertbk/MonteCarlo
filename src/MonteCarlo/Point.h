@@ -21,15 +21,6 @@ class Point{
   std::vector<int> m_NResFiles; //number of files already written (for each function)
   std::vector<double> m_average, m_stddev; //current result in memory
 
-  static std::string BackSlash;
-  static std::string DBext;
-  static std::string PointDatabase;
-  static std::string FullResRootName;
-  static std::string CurrentPointDatabase;
-  static std::string FunResFolderRootName;
-  static std::string FunResRootName;
-  static std::string PointFolderRootName;
-  static std::string PointResRootName;
   static const int m_NQuantities; //Quantities to exchange with MPI
 
   void WriteOnFile(std::vector<std::vector<double>*> *results);

@@ -5,8 +5,8 @@
 #include <string>
 #include <math.h>
 #include <algorithm>
-#include "MonteCarlo/Message.h"
-#include "MonteCarlo/Point.h"
+#include <MonteCarlo/Message.h>
+#include <MonteCarlo/Point.h>
 
 class Database {
  private:

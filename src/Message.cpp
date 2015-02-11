@@ -11,14 +11,14 @@
 #include <math.h>
 #include <algorithm> //for remove_if, isspace
 
-#include "MonteCarlo/Message.h"
+#include <MonteCarlo/Message.h>
 
 #if defined(HAVE_MPI)
 #include <mpi.h>
 #endif
 
 #if defined(HAVE_OMP)
-#include "omp.h"
+#include <omp.h>
 #endif
 
 

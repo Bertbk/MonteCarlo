@@ -7,8 +7,8 @@
 #include <sstream> //for osstream
 #include <algorithm>
 
-#include "MonteCarlo/Message.h"
-#include "MonteCarlo/Point.h"
+#include <MonteCarlo/Message.h>
+#include <MonteCarlo/Point.h>
 
 #ifdef HAVE_MPI
 #include<mpi.h>

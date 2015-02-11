@@ -10,8 +10,8 @@
 #include <vector>
 #include <algorithm>
 
-#include "MonteCarlo/Message.h"
-#include "MonteCarlo/Mesh.h"
+#include <MonteCarlo/Message.h>
+#include <MonteCarlo/Mesh.h>
 
 Mesh::Mesh(std::vector<double> X,  std::vector<double> Y)
 {

@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 
-
 /*
 This class builds, from two vectors of X and Y coordinates, a triangular mesh joining these point.
 The mesh is clearly not of good quality and 
@@ -13,8 +12,6 @@ The mesh is clearly not of good quality and
 -- Update() to build the mesh
 -- SetRes(...) to specify the results
 -- PrintRes(Filename) to create a .pos file (GetDP format) setting the result on the points.
-
-
 */
 class Mesh{
  private:

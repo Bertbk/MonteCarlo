@@ -137,7 +137,7 @@ void Point::LaunchMC()
 #pragma omp critical
 	{
 	  for(int ifun = 0; ifun < Message::GetNFUN() ; ifun++)
-	    resultsMC[ifun]->insert(MyresultsMC[ifun]->end(), MyresultsMC[ifun]->begin(), MyresultsMC[ifun]->end());
+	    resultsMC[ifun]->insert(resultsMC[ifun]->end(), MyresultsMC[ifun]->begin(), MyresultsMC[ifun]->end());
 	}
       }//end omp parallel
       //Updating files

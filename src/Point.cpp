@@ -111,22 +111,35 @@ void Point::LaunchMC()
       int MC_start = irestart*Restart;
       int MC_end = std::min(MC_MAX, (irestart + 1)*Restart);
       int MC_currentLoop = MC_end - MC_start;
-      // NFUN vectors of different sizes containing the results...
       std::vector<std::vector<double>* > resultsMC(NFUN);
+      int imc;
       for (int ifun = 0; ifun < NFUN; ifun ++)
 	{
 	  resultsMC[ifun] = new std::vector<double>;
 	  resultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
 	}
-      int imc;
-#pragma omp parallel for private(imc) default(shared)
-      for (imc = MC_start ; imc < MC_end ; imc++)
+#pragma omp parallel private(imc)
+      {
+	std::vector<std::vector<double>* > MyResultsMC(NFUN);
+	for (int ifun = 0; ifun < NFUN; ifun ++)
+	  {
+	    MyresultsMC[ifun] = new std::vector<double>;
+	    MyresultsMC[ifun]->reserve(MC_currentLoop/Message::GetNumThreads()+10); //Avoiding memory problem
+	  }
+#pragma omp for nowait
+	for (imc = MC_start ; imc < MC_end ; imc++)
+	  {
+	    std::vector<double> res_int;
+	    ShortCyclePlus(&res_int);
+	    for (int ifun = 0; ifun < NFUN; ifun ++)
+	      MyresultsMC[ifun]->push_back(res_int[ifun]);
+	  }
+#pragma omp critical
 	{
-          std::vector<double> res_int;
-	  ShortCyclePlus(&res_int);
-	  for (int ifun = 0; ifun < NFUN; ifun ++)
-	    resultsMC[ifun]->push_back(res_int[ifun]);
+	  for(int ifun = 0; ifun < Message::GetNFUN() ; ifun++)
+	    resultsMC[ifun].insert(MyresultsMC.end(), MyresultsMC_private.begin(), MyresultsMC_private.end());
 	}
+      }//end omp parallel
       //Updating files
       WriteOnFile(&resultsMC);
       //Cleaning

@@ -127,7 +127,7 @@ void Point::LaunchMC()
 	    MyresultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
 	  }
 #pragma omp for nowait schedule(dynamic)
-	for (imc = MC_start ; imc < MC_end ; imc++)
+	for (imc = 0 ; imc < MC_end -MC_start ; imc++)
 	  {
 	    std::vector<double> res_int;
 	    ShortCyclePlus(&res_int);

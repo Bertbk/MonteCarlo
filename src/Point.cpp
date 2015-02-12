@@ -122,7 +122,6 @@ void Point::LaunchMC()
 #pragma omp parallel for
       for (int imc = MC_start ; imc < MC_end ; imc++)
 	{
-          Message::Info("Kikoo imc = %d and thread =%d", imc, Message::GetThreadNum());
           std::vector<double> res_int;
 	  ShortCyclePlus(&res_int);
 	  for (int ifun = 0; ifun < NFUN; ifun ++)

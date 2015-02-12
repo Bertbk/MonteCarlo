@@ -124,7 +124,7 @@ void Point::LaunchMC()
 	for (int ifun = 0; ifun < NFUN; ifun ++)
 	  {
 	    MyresultsMC[ifun] = new std::vector<double>;
-	    MyresultsMC[ifun]->reserve(MC_currentLoop/Message::GetNumThreads()+10); //Avoiding memory problem
+	    MyresultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
 	  }
 #pragma omp for nowait
 	for (imc = MC_start ; imc < MC_end ; imc++)

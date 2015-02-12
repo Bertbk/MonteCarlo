@@ -338,7 +338,6 @@ void Database::LaunchMCSimulations()
 #endif
 }
 
-
 void Database::PrintPoints(){
   if(!Message::RootMpi())
     return;
@@ -357,7 +356,6 @@ void Database::PostProcessing(){
       std::stringstream iifun;
       iifun << ifun;
       std::string rootFunFolder = Message::GetFunResFolderRootName() + iifun.str() + Message::GetBackSlash();
-      //This loop is parallelizable (MPI)
       int nPToPos = Points.size();
       int myRank = Message::GetRank();
       int nMpi = Message::GetNProc();

@@ -14,8 +14,11 @@
 #include<mpi.h>
 #endif
 
-const int Point::m_NQuantities = 5;
+#ifdef HAVE_OMP
+#include <omp.h>
+#endif
 
+const int Point::m_NQuantities = 5;
 
 //constructor
 Point::Point(int id, double xi, double y){
@@ -116,7 +119,7 @@ void Point::LaunchMC()
 	  resultsMC[ifun] = new std::vector<double>;
 	  resultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
 	}
-//PRAGMA OMP PARALLEL FOR LOOP BLABLA
+#pragma omp parallel for
       for (int imc = MC_start ; imc < MC_end ; imc++)
 	{
 	  std::vector<double> res_int;
@@ -258,7 +261,6 @@ void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
   //Cleaning
   for (int ifunAux = 0; ifunAux < NFUNWithNewRes; ifunAux ++)
     delete fRes[ifunAux];
-
 }
 
 

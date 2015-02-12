@@ -100,27 +100,34 @@ void Point::LaunchMC()
   if(MC_MAX <= 0)
     return;
   Message::Info("[Proc %d] I will do %d MC tests on point with id %d and (xi,y) = (%g, %g)", Message::GetRank(), MC_MAX, m_id, m_xi, m_y);
-  //Prepare Res file
   //Restart is a parameter that forces the program to print on files every time 
   //a number of Restart computations have been done. 
   int Restart = Message::GetRestart();
   if(Restart <= 0)
     Restart = MC_MAX;
   int irestart_end = MC_MAX/Restart + std::min(1, MC_MAX%Restart);
+  int imc;
+#pragma omp parallel default(shared) private(imc)
+  {
   for (int irestart = 0; irestart < irestart_end; irestart ++)
     {
-      int MC_start = irestart*Restart;
-      int MC_end = std::min(MC_MAX, (irestart + 1)*Restart);
-      int MC_currentLoop;
-      // NFUN vectors of different sizes containing the results...
-      std::vector<std::vector<double>* > resultsMC(NFUN);
-      for (int ifun = 0; ifun < NFUN; ifun ++)
+#pragma omp barrier
+      if(Message::GetThreadNum()==0)
 	{
-	  resultsMC[ifun] = new std::vector<double>;
-	  resultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
+	  int MC_start = irestart*Restart;
+	  int MC_end = std::min(MC_MAX, (irestart + 1)*Restart);
+	  int MC_currentLoop;
+	  // NFUN vectors of different sizes containing the results...
+	  std::vector<std::vector<double>* > resultsMC(NFUN);
+	  for (int ifun = 0; ifun < NFUN; ifun ++)
+	    {
+	      resultsMC[ifun] = new std::vector<double>;
+	      resultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
+	    }
 	}
-#pragma omp parallel for
-      for (int imc = MC_start ; imc < MC_end ; imc++)
+#pragma omp barrier
+#pragma omp for
+      for (imc = MC_start ; imc < MC_end ; imc++)
 	{
           std::vector<double> res_int;
 	  ShortCyclePlus(&res_int);
@@ -132,6 +139,7 @@ void Point::LaunchMC()
       //Cleaning
       for (int ifun = 0; ifun < NFUN; ifun ++)
 	delete resultsMC[ifun];
+    }
     }
   Message::Info("[Proc %d] Finnished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
 }

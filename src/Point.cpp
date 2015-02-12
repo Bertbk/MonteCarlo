@@ -110,7 +110,7 @@ void Point::LaunchMC()
     {
       int MC_start = irestart*Restart;
       int MC_end = std::min(MC_MAX, (irestart + 1)*Restart);
-      int MC_currentLoop;
+      int MC_currentLoop = MC_end - MC_start;
       // NFUN vectors of different sizes containing the results...
       std::vector<std::vector<double>* > resultsMC(NFUN);
       for (int ifun = 0; ifun < NFUN; ifun ++)

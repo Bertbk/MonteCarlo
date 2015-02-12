@@ -131,14 +131,18 @@ void Point::LaunchMC()
 	  {
 	    std::vector<double> res_int;
 	    ShortCyclePlus(&res_int);
-	    for (int ifun = 0; ifun < NFUN; ifun ++)
-	      MyresultsMC[ifun]->push_back(res_int[ifun]);
+	    //	    for (int ifun = 0; ifun < NFUN; ifun ++)
+	    //MyresultsMC[ifun]->push_back(res_int[ifun]);
 	  }
 #pragma omp critical
 	{
-	  for(int ifun = 0; ifun < Message::GetNFUN() ; ifun++)
-	    resultsMC[ifun]->insert(resultsMC[ifun]->end(), MyresultsMC[ifun]->begin(), MyresultsMC[ifun]->end());
+	  //	  for(int ifun = 0; ifun < Message::GetNFUN() ; ifun++)
+	  // resultsMC[ifun]->insert(resultsMC[ifun]->end(), MyresultsMC[ifun]->begin(), MyresultsMC[ifun]->end());
 	}
+	//Cleaning
+      for (int ifun = 0; ifun < NFUN; ifun ++)
+	delete MyresultsMC[ifun];
+
       }//end omp parallel
       //Updating files
       WriteOnFile(&resultsMC);

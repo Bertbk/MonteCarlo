@@ -364,3 +364,12 @@ void Message::DistributeWork(int N, std::vector<int> *iStart, std::vector<int> *
     }
 }
 
+
+static int GetThreadNum()
+{
+#ifdef HAVE_OMP
+  return omp_get_thread_num();
+#else
+  return 0;
+#endif
+}

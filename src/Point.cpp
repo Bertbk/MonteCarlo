@@ -120,7 +120,6 @@ void Point::LaunchMC()
 	}
       int imc;
 #pragma omp parallel for private(imc) default(shared)
-      {
       for (imc = MC_start ; imc < MC_end ; imc++)
 	{
           std::vector<double> res_int;
@@ -128,7 +127,6 @@ void Point::LaunchMC()
 	  for (int ifun = 0; ifun < NFUN; ifun ++)
 	    resultsMC[ifun]->push_back(res_int[ifun]);
 	}
-      }
       //Updating files
       WriteOnFile(&resultsMC);
       //Cleaning

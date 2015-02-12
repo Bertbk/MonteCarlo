@@ -12,18 +12,26 @@ endif()
 project(MonteCarlo CXX)
 # ==============
 
-option(HAVE_MPI "Compile with MPI" OFF)
-option(HAVE_OMP "Compile with OpenMP" OFF)
+option(ENABLE_MPI "Compile with MPI" OFF)
+option(ENABLE_OMP "Compile with OpenMP" OFF)
 
 
-if(HAVE_MPI)
+if(ENABLE_MPI)
   find_package(MPI REQUIRED)
   include_directories(${MPI_INCLUDE_PATH})
   if(MPI_FOUND)
-  set(CMAKE_CXX_COMPILER mpicxx)
-   add_definitions(-DHAVE_MPI)
+	set(CMAKE_CXX_COMPILER mpicxx)
+	add_definitions(-DHAVE_MPI)
   endif(MPI_FOUND)
-endif(HAVE_MPI)
+endif(ENABLE_MPI)
+
+if(ENABLE_OMP)
+	find_package(OpenMP)
+	if (OPENMP_FOUND)
+		add_definitions(-DHAVE_OMP)
+		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+	endif(OPENMP_FOUND)
+endif(ENABLE_OMP)
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_subdirectory(Src)

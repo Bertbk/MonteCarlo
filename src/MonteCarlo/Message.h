@@ -71,6 +71,7 @@ class Message{
   static int GetRank(){return m_myRank;};
   static int GetNProc(){return m_nb_proc;};
   static int GetNumThreads(){return  m_nb_threads;};
+  static int GetThreadNum();
   static int RootMpi(){return (m_myRank == 0);}
   static int GetComputeMC(){return m_ComputeMC;};
   static int GetRestart(){return m_restart;};

@@ -25,7 +25,7 @@ if(HAVE_MPI)
   endif(MPI_FOUND)
 endif(HAVE_MPI)
 
-
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_subdirectory(Src)
 
 

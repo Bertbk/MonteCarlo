@@ -134,11 +134,14 @@ void Point::LaunchMC()
 	  for (int ifun = 0; ifun < NFUN; ifun ++)
 	    resultsMC[ifun]->push_back(res_int[ifun]);
 	}
-      //Updating files
-      WriteOnFile(&resultsMC);
-      //Cleaning
-      for (int ifun = 0; ifun < NFUN; ifun ++)
-	delete resultsMC[ifun];
+      if(Message::GetThreadNum()==0)
+	{
+	  //Updating files
+	  WriteOnFile(&resultsMC);
+	  //Cleaning
+	  for (int ifun = 0; ifun < NFUN; ifun ++)
+	    delete resultsMC[ifun];
+	}
     }
     }
   Message::Info("[Proc %d] Finnished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);

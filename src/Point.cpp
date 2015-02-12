@@ -120,7 +120,7 @@ void Point::LaunchMC()
 	}
 #pragma omp parallel private(imc)
       {
-	std::vector<std::vector<double>* > MyResultsMC(NFUN);
+	std::vector<std::vector<double>* > MyResultsMC(Message::GetNFUN());
 	for (int ifun = 0; ifun < NFUN; ifun ++)
 	  {
 	    MyresultsMC[ifun] = new std::vector<double>;

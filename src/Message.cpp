@@ -365,7 +365,7 @@ void Message::DistributeWork(int N, std::vector<int> *iStart, std::vector<int> *
 }
 
 
-static int Message::GetThreadNum()
+int Message::GetThreadNum()
 {
 #ifdef HAVE_OMP
   return omp_get_thread_num();

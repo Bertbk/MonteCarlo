@@ -70,6 +70,7 @@ class Message{
   static int Precision(){return 17;} //set decimal precision for output file
   static int GetRank(){return m_myRank;};
   static int GetNProc(){return m_nb_proc;};
+  static int GetThreadNum(){return omp_get_thread_num();};
   static int RootMpi(){return (m_myRank == 0);}
   static int GetComputeMC(){return m_ComputeMC;};
   static int GetRestart(){return m_restart;};

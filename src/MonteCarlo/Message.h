@@ -14,6 +14,7 @@ class Message{
   static std::string m_resDir, m_helpDir;
   static int m_verbosity;
   static int m_myRank, m_nb_proc;
+  static int m_nb_threads;
   //---------------------------
   //Parameters of simulations
   //---------------------------

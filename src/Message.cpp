@@ -30,6 +30,7 @@ int Message::m_verbosity = 4;
 std::string Message::GMSHFileName = "res";
 int Message::m_myRank = 0;
 int Message::m_nb_proc = 1;
+int Message::m_nb_threads = 1;
 //PARAMETERS
 //==============
 double Message::m_deuxpi = 8*atan(1.0);

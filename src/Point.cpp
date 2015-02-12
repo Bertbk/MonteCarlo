@@ -118,8 +118,10 @@ void Point::LaunchMC()
 	  resultsMC[ifun] = new std::vector<double>;
 	  resultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
 	}
+	Message::Info("OPENING...");
 #pragma omp parallel private(imc)
       {
+	Message::Info("Threads %d : OPENED", Message::GetThreadNum());
 	std::vector<std::vector<double>* > MyresultsMC(Message::GetNFUN());
 	for (int ifun = 0; ifun < NFUN; ifun ++)
 	  {

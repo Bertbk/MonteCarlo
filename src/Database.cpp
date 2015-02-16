@@ -22,7 +22,8 @@ Database::~Database(){
 
 void Database::Init()
 {
-  Message::Info("Init Database...");
+  if(Message::RootMPI())
+    Message::Info("Init Database...");
   CheckOrBuildRootFolder();
   //Read folder then subfolder, then ...
   int DbExists = ParseRootFiles();

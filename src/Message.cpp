@@ -260,7 +260,8 @@ void Message::Finalize(int status)
 //Parse param file to find the parameters wanted by the user ^_^
 void Message::Parse()
 {
-  Message::Info("Parse param file \"%s\"...", m_paramFile.c_str());
+  if(Message::RootMPI())
+    Message::Info("Parse param file \"%s\"...", m_paramFile.c_str());
   std::ifstream pfile(m_paramFile.c_str());
   if(!pfile.is_open())
     {

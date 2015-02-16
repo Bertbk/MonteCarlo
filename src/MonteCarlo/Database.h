@@ -19,14 +19,14 @@ class Database {
   int ParseRootFiles();
   //loop on PointXX folder and parse the files and funXX folder...
   void ParsePointFiles();
-  void ParsePosFiles();
 
   void BuildFolderPoint(int id); // Create a folder for the point with empty files
   void RebuildPointsDb(); // Rebuild points.db
   void PreparePointsToDo(); // For each points of id in "PointsIdToDo", compute the number of MC to do
-  void CheckOrBuildRootFolder(); // Create res folder and basics help files (if not exist)
+  void InitResFolder(); // Create res folder and basics help files (if not exist)
   void Isend(int emitter, int receiver);
   void Irecv(int emitter, int receiver);
+  void Broadcast(int rank);
  public:
   //Constructor
   Database(std::string resdir);

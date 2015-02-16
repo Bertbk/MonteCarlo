@@ -24,17 +24,16 @@ void Database::Init()
 {
   if(Message::RootMpi())
     Message::Info("Init Database...");
-  CheckOrBuildRootFolder();
+  InitResFolder();
+  Message::Barrier();
   //Read folder then subfolder, then ...
   int DbExists = ParseRootFiles();
+  Message::Barrier();
   if(DbExists)
-    {
       ParsePointFiles();
-      ParsePosFiles();
-    }
 }
 
-void Database::CheckOrBuildRootFolder()
+void Database::InitResFolder()
 {
   if(!Message::RootMpi())
     return;
@@ -118,57 +117,57 @@ int Database::ParseRootFiles(){
     }
 }
 
-void Database::ParsePosFiles(){
-  Message::Info("ParsePosFiles...");
-}
 
 void Database::ParsePointFiles(){
-  Message::Info("ParsePointFiles...");
-  for (int iPoint = 0; iPoint < Points.size() ; iPoint ++)
+  if(Message::RootMpi())
     {
-      std::stringstream iiPoint;
-      iiPoint << iPoint;
-      std::string PointFolder = Message::GetResDir() + Message::GetPointFolderRootName() + iiPoint.str() + Message::GetBackSlash();
-      //Create - if not exist - the foler file
-      std::string command_PointFolder = "if ! test -d " + PointFolder + "; then mkdir "+ PointFolder+"; fi";
-      system(command_PointFolder.c_str());
-
-      for (int ifun = 0; ifun < Message::GetNFUN() ; ifun ++)
+      Message::Info("ParsePointFiles...");
+      for (int iPoint = 0; iPoint < Points.size() ; iPoint ++)
 	{
-	  std::stringstream iifun;
-	  iifun << ifun;
-	  //Check if folder exists
-	  std::string FunFolder = PointFolder + Message::GetFunResFolderRootName() + iifun.str();
-	  std::string command_FunFolder = "if ! test -d " + FunFolder + "; then mkdir "+ FunFolder+"; fi";
-	  system(command_FunFolder.c_str());
-	  //Read summary file funXX.db
-	  std::string FunFileName = PointFolder + Message::GetFunResRootName() + iifun.str() + Message::GetDBext();
-	  //Open file
-	  std::ifstream FunDb(FunFileName.c_str(), std::ios_base::in);
-	  if(!FunDb.is_open())
+	  std::stringstream iiPoint;
+	  iiPoint << iPoint;
+	  //Create - if not exist - the folder file
+	  std::string PointFolder = Message::GetResDir() + Message::GetPointFolderRootName() + iiPoint.str() + Message::GetBackSlash();
+	  std::string command_PointFolder = "if ! test -d " + PointFolder + "; then mkdir "+ PointFolder+"; fi";
+	  system(command_PointFolder.c_str());
+	  
+	  for (int ifun = 0; ifun < Message::GetNFUN() ; ifun ++)
 	    {
-	      Message::Warning("No %s for Point %d and function %d found... Building empty file", Message::GetFunResRootName().c_str(), iPoint, ifun);
-	      std::ofstream FunDbWrite(FunFileName.c_str(), std::ios_base::out);
-	      FunDbWrite << 0 << std::endl; // MC done (total)
-	      FunDbWrite << 0 << std::endl; // N files
-	      FunDbWrite.close();
-	      FunDb.open(FunFileName.c_str(), std::ios_base::in);
-	    }
-	  else
-	    {
-	      //Read files
-	      int nresfiles, nMCDone;
-	      double aver, standddev;
-	      FunDb >> nresfiles;
-	      FunDb >> nMCDone;
-	      FunDb >> aver;
-	      FunDb >> standddev;
-	      Points[iPoint]->SetNResFiles(ifun, nresfiles);
-	      Points[iPoint]->SetMCDone(ifun, nMCDone);
+	      std::stringstream iifun;
+	      iifun << ifun;
+	      //Check if folder exists
+	      std::string FunFolder = PointFolder + Message::GetFunResFolderRootName() + iifun.str();
+	      std::string command_FunFolder = "if ! test -d " + FunFolder + "; then mkdir "+ FunFolder+"; fi";
+	      system(command_FunFolder.c_str());
+	      //Read summary file funXX.db
+	      std::string FunFileName = PointFolder + Message::GetFunResRootName() + iifun.str() + Message::GetDBext();
+	      //Open file
+	      std::ifstream FunDb(FunFileName.c_str(), std::ios_base::in);
+	      if(!FunDb.is_open())
+		{
+		  Message::Warning("No %s for Point %d and function %d found... Building empty file", Message::GetFunResRootName().c_str(), iPoint, ifun);
+		  std::ofstream FunDbWrite(FunFileName.c_str(), std::ios_base::out);
+		  FunDbWrite << 0 << std::endl; // MC done (total)
+		  FunDbWrite << 0 << std::endl; // N files
+		  FunDbWrite.close();
+		  FunDb.open(FunFileName.c_str(), std::ios_base::in);
+		}
+	      else
+		{
+		  //Read files
+		  int nresfiles, nMCDone;
+		  FunDb >> nresfiles;
+		  FunDb >> nMCDone;
+		  Points[iPoint]->SetNResFiles(ifun, nresfiles);
+		  Points[iPoint]->SetMCDone(ifun, nMCDone);
+		}
 	    }
 	}
+      Message::Info("End ParsePointFiles...");
     }
-  Message::Info("End ParsePointFiles...");
+  //Broadcase the Database to every other one
+  Broadcast(0);
+
 }
 
 
@@ -207,7 +206,7 @@ void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y,
   Points.resize(Points.size() + newpointindex.size()); //Adding new points...
   if(newpointindex.size()>0)
     {
-      Message::Info("Creating new folders and rebuilding the Database Points.db");
+      Message::Info("Building new points (folder, etc.)");
       for (int i =0 ;i < newpointindex.size(); i ++)
 	{
 	  int ixi = newpointindex[i];
@@ -218,15 +217,10 @@ void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y,
 	  //Increase NewId size
 	  newId++;
 	}
-
-      //Update points.db
-#if defined HAVE_MPI
-      //Possible problem with reading process still searching the file...
-      MPI_Barrier(MPI_COMM_WORLD);
-#endif
       RebuildPointsDb();
     }
   PreparePointsToDo();
+  Message::Barrier();
 }
 
 void Database::BuildFolderPoint(int id)
@@ -430,4 +424,34 @@ void Database::PrintPOS(std::string FileName)
   myMesh.Update();
   myMesh.PrintRes(Message::GetResDir()+FileName);
   myMesh.PrintMesh(Message::GetResDir()+"lol");
+}
+
+void Database::Broadcast(int rank)
+{
+#ifdef HAVE_MPI
+  int Npoints;
+  if(Message::GetRank()==rank)
+    Npoints = Points.size();
+  //Bcast Npoint
+  MPI_Bcast(&Npoints, 1, MPI_INT, rank, MPI_COMM_WORLD);
+  if(Message::GetRank() !=rank)
+    Points.resize(Npoints);
+  //Broadcast every point
+  for (int iP = 0; iP < Npoints; iP++)
+    {
+      int id, xi, y;
+      if(Message::GetRank() !=rank)
+	{
+	  id = Points[iP]->GetId();
+	  xi = Points[iP]->GetXi();
+	  y = Points[iP]->GetY();
+	}
+      MPI_Bcast(&id, 1, MPI_INT, rank, MPI_COMM_WORLD);
+      MPI_Bcast(&xi, 1, MPI_DOUBLE, rank, MPI_COMM_WORLD);
+      MPI_Bcast(&y, 1, MPI_DOUBLE, rank, MPI_COMM_WORLD);
+      if(Message::GetRank() !=rank)
+	Points[iP] = new Point(id, xi, y);
+      Points[iP]->Broadcast(rank);
+    }
+#endif
 }

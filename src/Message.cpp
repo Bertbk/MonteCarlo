@@ -372,3 +372,11 @@ int Message::GetThreadNum()
   return 0;
 #endif
 }
+
+void Message::Barrier()
+{
+#ifdef HAVE_MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+  return;
+}

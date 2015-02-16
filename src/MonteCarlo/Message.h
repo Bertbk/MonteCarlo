@@ -88,6 +88,8 @@ class Message{
   static void Parse();
   static void Finalize(int status);
   static void Help();
+  //MPI
+  static void Barrier();
   //=======================
   // PARAMETERS FUNCTIONS
   //=======================

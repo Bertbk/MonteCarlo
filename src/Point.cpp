@@ -152,7 +152,7 @@ void Point::LaunchMC()
       for (int ifun = 0; ifun < NFUN; ifun ++)
 	delete resultsMC[ifun];
     }
-  Message::Info("Finished %d MC tests on point (%g,%g)", Message::GetRank(), MC_MAX, m_xi, m_y);
+  Message::Info("Finished %d MC tests on point (%g,%g)", MC_MAX, m_xi, m_y);
 }
 
 void Point::ShortCyclePlus(std::vector<double> *integrals, unsigned int *Seed)

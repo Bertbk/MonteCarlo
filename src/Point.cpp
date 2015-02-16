@@ -100,7 +100,7 @@ void Point::LaunchMC()
     MC_MAX = std::max(MC_MAX, m_MC_to_do[ifun]);
   if(MC_MAX <= 0)
     return;
-  Message::Info("[Proc %d] I will do %d MC tests on point with id %d and (xi,y) = (%g, %g)", Message::GetRank(), MC_MAX, m_id, m_xi, m_y);
+  Message::Info("Me and my %d threads will do %d MC tests on point with id %d and (xi,y) = (%g, %g)", Message::GetNumThreads(), MC_MAX, m_id, m_xi, m_y);
   //Restart is a parameter that forces the program to print on files every time 
   //a number of Restart computations have been done. 
   int Restart = Message::GetRestart();
@@ -119,18 +119,16 @@ void Point::LaunchMC()
 	  resultsMC[ifun] = new std::vector<double>;
 	  resultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
 	}
-	Message::Info("OPENING...");
 #pragma omp parallel private(imc)
       {
 	unsigned int Seed = time(NULL) - 360000*(Message::GetRank()*Message::GetNumThreads() + Message::GetThreadNum());
-	Message::Info("Threads %d : OPENED", Message::GetThreadNum());
 	std::vector<std::vector<double>* > MyresultsMC(Message::GetNFUN());
 	for (int ifun = 0; ifun < NFUN; ifun ++)
 	  {
 	    MyresultsMC[ifun] = new std::vector<double>;
-	    MyresultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
+	    MyresultsMC[ifun]->reserve(MC_currentLoop/(Message::GetNumThreads()) + Message::GetNumThreads()); //Avoiding memory problem
 	  }
-#pragma omp for ordered schedule(static)
+#pragma omp for nowait schedule(static)
 	for (imc = MC_start ; imc < MC_end ; imc++)
 	  {
 	    std::vector<double> res_int(NFUN);
@@ -138,15 +136,14 @@ void Point::LaunchMC()
 	    for (int ifun = 0; ifun < NFUN; ifun ++)
 	      MyresultsMC[ifun]->push_back(res_int[ifun]);
 	  }
-	Message::Info("Threads %d terminé", Message::GetThreadNum());
 #pragma omp critical
 	{
 	  for(int ifun = 0; ifun < Message::GetNFUN() ; ifun++)
 	    resultsMC[ifun]->insert(resultsMC[ifun]->end(), MyresultsMC[ifun]->begin(), MyresultsMC[ifun]->end());
 	}
 	//Cleaning
-      for (int ifun = 0; ifun < NFUN; ifun ++)
-	delete MyresultsMC[ifun];
+	for (int ifun = 0; ifun < NFUN; ifun ++)
+	  delete MyresultsMC[ifun];
 
       }//end omp parallel
       //Updating files
@@ -155,14 +152,17 @@ void Point::LaunchMC()
       for (int ifun = 0; ifun < NFUN; ifun ++)
 	delete resultsMC[ifun];
     }
-  Message::Info("[Proc %d] Finished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
+  Message::Info("Finished %d MC tests on point (%g,%g)", Message::GetRank(), MC_MAX, m_xi, m_y);
 }
 
 void Point::ShortCyclePlus(std::vector<double> *integrals, unsigned int *Seed)
 {
-  //DEBUG
-  srand(0);
   int NFUN = Message::GetNFUN();
+  if(integrals->size()!=NFUN)
+    {
+      Message::Warning("ShortCyclePlus: integrals is not of the right size! Abording...");
+      Message::Finalize(EXIT_FAILURE);
+    }
   for(int i = 0; i < NFUN; i++)
     (*integrals)[i] = 0.0;
   //run a trajectory starting from (xi,y) \in DELTAPLUS of the solution on the boundary.
@@ -240,6 +240,7 @@ double Point::uniform(unsigned int *Seed)
 //Write on file and update data about the point...
 void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
 {
+  Message::Info(4, "WriteOnFile");
   int NFUN = Message::GetNFUN();
   //Index of the functions that have new results to be stored !
   std::vector<int> FunWithNewResults;

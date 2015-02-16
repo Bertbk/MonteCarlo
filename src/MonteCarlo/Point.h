@@ -1,7 +1,7 @@
 #ifndef _Point_H_
 #define _Point_H_
 
-#include<math.h>
+//#include<math.h>
 #include<vector>
 #ifdef HAVE_MPI
 #include<mpi.h>
@@ -39,11 +39,11 @@ class Point{
   //Monte Carlo simulations
   void SetMCToDo(std::vector<int> *desired_MC); // Set the right MC_to_do, by comparing (differencing) m_MC and m_Desired_MC...
   void LaunchMC();
-  void ShortCyclePlus(std::vector<double> *integrals);
+  void ShortCyclePlus(std::vector<double> *integrals, unsigned int *Seed);
   void PostProcessing(int ifun); // Read all the results, compute the average and standard dev
   //double uniform(){return (1+2)/(1+(double)RAND_MAX);   }
-  static double uniform(){return (1+(double)rand())/(1+(double)RAND_MAX);   }
-  static double gauss(){return sqrt(-2.*log(uniform()))*cos(Message::GetDeuxPi()*uniform());}
+  static double uniform(unsigned int *Seed);
+  static double gauss(unsigned int *Seed);
   static double f(double xi, int i);
   static double gplus(double xi, double y, int i);
   void Print();

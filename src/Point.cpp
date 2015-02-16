@@ -6,6 +6,7 @@
 #include <time.h>
 #include <sstream> //for osstream
 #include <algorithm>
+#include <math.h>
 
 #include <MonteCarlo/Message.h>
 #include <MonteCarlo/Point.h>
@@ -121,6 +122,7 @@ void Point::LaunchMC()
 	Message::Info("OPENING...");
 #pragma omp parallel private(imc)
       {
+	unsigned int Seed = time(NULL) - 360000*(Message::GetRank()*Message::GetNumThreads() + Message::GetThreadNum());
 	Message::Info("Threads %d : OPENED", Message::GetThreadNum());
 	std::vector<std::vector<double>* > MyresultsMC(Message::GetNFUN());
 	for (int ifun = 0; ifun < NFUN; ifun ++)
@@ -128,19 +130,19 @@ void Point::LaunchMC()
 	    MyresultsMC[ifun] = new std::vector<double>;
 	    MyresultsMC[ifun]->reserve(MC_currentLoop); //Avoiding memory problem
 	  }
-#pragma omp for nowait schedule(dynamic)
+#pragma omp for ordered schedule(static)
 	for (imc = MC_start ; imc < MC_end ; imc++)
 	  {
-	    std::vector<double> res_int;
-	    ShortCyclePlus(&res_int);
-	    //	    for (int ifun = 0; ifun < NFUN; ifun ++)
-	    //MyresultsMC[ifun]->push_back(res_int[ifun]);
+	    std::vector<double> res_int(NFUN);
+	    ShortCyclePlus(&res_int, &Seed);
+	    for (int ifun = 0; ifun < NFUN; ifun ++)
+	      MyresultsMC[ifun]->push_back(res_int[ifun]);
 	  }
 	Message::Info("Threads %d terminé", Message::GetThreadNum());
 #pragma omp critical
 	{
-	  //	  for(int ifun = 0; ifun < Message::GetNFUN() ; ifun++)
-	  // resultsMC[ifun]->insert(resultsMC[ifun]->end(), MyresultsMC[ifun]->begin(), MyresultsMC[ifun]->end());
+	  for(int ifun = 0; ifun < Message::GetNFUN() ; ifun++)
+	    resultsMC[ifun]->insert(resultsMC[ifun]->end(), MyresultsMC[ifun]->begin(), MyresultsMC[ifun]->end());
 	}
 	//Cleaning
       for (int ifun = 0; ifun < NFUN; ifun ++)
@@ -153,13 +155,14 @@ void Point::LaunchMC()
       for (int ifun = 0; ifun < NFUN; ifun ++)
 	delete resultsMC[ifun];
     }
-  Message::Info("[Proc %d] Finnished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
+  Message::Info("[Proc %d] Finished %d MC tests on point %g %g", Message::GetRank(), MC_MAX, m_xi, m_y);
 }
 
-void Point::ShortCyclePlus(std::vector<double> *integrals)
+void Point::ShortCyclePlus(std::vector<double> *integrals, unsigned int *Seed)
 {
+  //DEBUG
+  srand(0);
   int NFUN = Message::GetNFUN();
-  integrals->resize(NFUN);
   for(int i = 0; i < NFUN; i++)
     (*integrals)[i] = 0.0;
   //run a trajectory starting from (xi,y) \in DELTAPLUS of the solution on the boundary.
@@ -182,8 +185,8 @@ void Point::ShortCyclePlus(std::vector<double> *integrals)
       t += dt;
       if(t > T){ t = T;}
       //noise
-      double g1 = gauss();
-      double g2 = gauss();
+      double g1 = gauss(Seed);
+      double g2 = gauss(Seed);
       double xi_aux = xi, y_aux = y;
       xi += -alpha*xi_aux*dt + sdt*g1;
       y  += -(alpha*xi_aux + c0*y_aux + k*Y)*dt + sdt*(ro*g1 + roc*g2);
@@ -202,14 +205,37 @@ void Point::ShortCyclePlus(std::vector<double> *integrals)
 
 double Point::gplus(double xi, double y, int ifun)
 {
-  if( ifun == 0) return f(xi, ifun)*f(y, ifun);
-  else return -1.;
+  return f(xi, ifun)*f(y, ifun);
 }
 
 double Point::f(double xi, int ifun){ 
-  if(ifun == 0) return exp(-xi*xi);
-  else return -1.;
+  if(ifun == 0){
+    double res = exp(-xi*xi);
+    return res;
+  }
+  else{
+    Message::Warning("This function number %d is not implemented yet, abording...", ifun);
+    Message::Finalize(EXIT_FAILURE);
+    return -1;
+  };
 }
+
+double Point::gauss(unsigned int *Seed)
+{
+  double rand1 = uniform(Seed);
+  double rand2 = uniform(Seed);
+  double res = sqrt(-2.*log(rand1))*cos(Message::GetDeuxPi()*rand2);
+  return res;
+}
+
+
+double Point::uniform(unsigned int *Seed)
+{
+  double randNum = static_cast<double>(rand_r(Seed));
+  double res = (1+randNum)/(1+static_cast<double>(RAND_MAX));
+  return res;
+}
+
 
 //Write on file and update data about the point...
 void Point::WriteOnFile(std::vector<std::vector<double>*> *results)

@@ -33,7 +33,7 @@ int Message::m_nb_proc = 1;
 int Message::m_nb_threads = 1;
 //PARAMETERS
 //==============
-double Message::m_deuxpi = 8*atan(1.0);
+const double Message::m_deuxpi = 8*atan(1.0);
 double Message::m_lambda = 0.1;
 //parameters of the oscillator
 double Message::m_Y   = 1.0;
@@ -83,8 +83,6 @@ void Message::Initialize(int argc, char *argv[])
   if(m_myRank == 0)
     Message::Info("Launched with MPI (%d processes)", m_nb_proc);
 #endif
-  //Seed of rand function
-  srand(time(NULL) - 360000*m_myRank);
 #if defined(HAVE_OMP)
 #pragma omp parallel
   {

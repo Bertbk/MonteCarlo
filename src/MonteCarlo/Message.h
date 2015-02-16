@@ -25,7 +25,7 @@ class Message{
   static std::vector<int> m_desired_MC;
   static int m_restart; // At every restart results, then write on file
   //constants
-  static double m_deuxpi;
+  static const double m_deuxpi;
   static double m_lambda;
   //parameters of the oscillator
   static double m_Y;

@@ -22,7 +22,7 @@ Database::~Database(){
 
 void Database::Init()
 {
-  if(Message::RootMPI())
+  if(Message::RootMpi())
     Message::Info("Init Database...");
   CheckOrBuildRootFolder();
   //Read folder then subfolder, then ...

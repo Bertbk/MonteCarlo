@@ -418,7 +418,8 @@ void Database::PrintPOS(std::string FileName)
 {
   if(!Message::RootMpi())
     return;
-  if(nPToPos == 0)
+  int np = Points.size();
+  if(np == 0)
     {
       Message::Warning("Post processing impossible: no point detected");
       return;

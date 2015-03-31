@@ -345,13 +345,18 @@ void Database::PostProcessing(){
   if(Message::RootMpi())
     Message::Info("Post-Processing...");
   int NFUN = Message::GetNFUN();
+  int nPToPos = Points.size();
+  if(nPToPos == 0)
+    {
+      Message::Warning("Post processing impossible: no point detected");
+      return;
+    }
   for (int ifun =0; ifun < NFUN; ifun ++)
     {
       //Folder name
       std::stringstream iifun;
       iifun << ifun;
       std::string rootFunFolder = Message::GetFunResFolderRootName() + iifun.str() + Message::GetBackSlash();
-      int nPToPos = Points.size();
       int myRank = Message::GetRank();
       int nMpi = Message::GetNProc();
       std::vector<int> iP_start, iP_end;

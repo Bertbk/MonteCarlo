@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
   if(Message::GetPos())
     {
       if(Message::RootMpi())
-	Message::Info("Let's compute some MC...");
+	Message::Info("Let's do some Post Processing...");
       // write file funXX.pos on root folder
       Db.PostProcessing(); 
     }

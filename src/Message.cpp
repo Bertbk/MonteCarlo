@@ -230,7 +230,7 @@ void Message::Check()
     {
       if(m_FunChoice[i])  Message::Info("Function %d: Yes", i);
       else  Message::Info("Function %d: No (setting MC[%d]=0)", i, i);
-      Message::Info("MC[%d] desired=%d %s", i, m_desired_MC[i], m_ComputeMC?"":"(But not computation is asked)");
+      Message::Info("MC[%d] desired=%d %s", i, m_desired_MC[i], m_ComputeMC?"":"(But no computation is asked)");
     }
   Message::Info("Restart: %d", m_restart);
   Message::Info("=============== Grid ==============");

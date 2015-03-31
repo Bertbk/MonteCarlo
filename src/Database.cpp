@@ -421,7 +421,7 @@ void Database::PrintPOS(std::string FileName)
   int np = Points.size();
   if(np == 0)
     {
-      Message::Warning("Post processing impossible: no point detected");
+      Message::Warning("GMSH Post processing impossible: no point detected");
       return;
     }
   //Rebuild Database to be sure to have the last informations

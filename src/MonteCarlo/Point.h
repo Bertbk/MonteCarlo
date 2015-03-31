@@ -11,10 +11,10 @@
 class Point{
  private:
   int m_id; //id of the point
+  double m_xi, m_y;
   std::string m_id_str; // id, version string
   std::string m_IdDir;
   std::string m_myDir;
-  double m_xi, m_y;
   std::vector<int> m_MC; //number of simu already done (for each function)
   std::vector<int> m_MC_DoneButNotRegistered; //number of simu done but not written on disks (for each function)
   std::vector<int> m_MC_to_do; //number of simu to do (for each function)

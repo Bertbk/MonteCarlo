@@ -22,15 +22,13 @@
 const int Point::m_NQuantities = 5;
 
 //constructor
-Point::Point(int id, double xi, double y){
-  m_id = id;
-  m_xi = xi;
-  m_y = y;
-  m_MC.resize(Message::GetNFUN());
-  m_MC_to_do.resize(Message::GetNFUN());
-  m_NResFiles.resize(Message::GetNFUN());
-  m_average.resize(Message::GetNFUN());
-  m_stddev.resize(Message::GetNFUN());
+Point::Point(int id, double xi, double y): m_id(id), m_xi(xi), m_y(y)
+{
+  m_MC.resize(Message::GetNFUN(), 0);
+  m_MC_to_do.resize(Message::GetNFUN(), 0);
+  m_NResFiles.resize(Message::GetNFUN(), 0);
+  m_average.resize(Message::GetNFUN(), 0);
+  m_stddev.resize(Message::GetNFUN(), 0);
   std::stringstream iid;
   iid << m_id;
   m_id_str = iid.str();
@@ -297,8 +295,6 @@ void Point::WriteOnFile(std::vector<std::vector<double>*> *results)
       std::ostringstream osifun;
       osifun << ifunId;
       std::string funXXName = m_myDir + Message::GetFunResRootName() +osifun.str() + Message::GetDBext();
-      std::string commandBACKUP = "cp " + funXXName + " " + funXXName + "_backup";
-      system(commandBACKUP.c_str());
       std::ofstream funXX(funXXName.c_str(), std::ios_base::out);
       funXX << m_NResFiles[ifunId]<< "\n";
       funXX << m_MC[ifunId]<< "\n";

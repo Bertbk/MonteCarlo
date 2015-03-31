@@ -49,42 +49,42 @@ void Database::InitResFolder()
   //Check help files
   std::string HelpPointsDbName = Message::GetResDir() + Message::GetHelpDir() +  Message::GetPointDatabase() + Message::GetDBext() + "_help";
   std::ofstream OutHelpPointsDb(HelpPointsDbName.c_str(), std::ios_base::out);
-  OutHelpPointsDb << "Number of Points" << "\n";
-  OutHelpPointsDb << "Id_0   Xi_0   Y_0" << "\n";
-  OutHelpPointsDb << "Id_1   Xi_1   Y_1" << "\n";
-  OutHelpPointsDb << "Id_2   Xi_2   Y_2" << "\n";
-  OutHelpPointsDb << " .      .      ." << "\n";
-  OutHelpPointsDb << " .      .      ." << "\n";
-  OutHelpPointsDb << " .      .      ." << "\n";
+  OutHelpPointsDb << "1: Number of Points" << "\n";
+  OutHelpPointsDb << "2: Id_0   Xi_0   Y_0" << "\n";
+  OutHelpPointsDb << "3: Id_1   Xi_1   Y_1" << "\n";
+  OutHelpPointsDb << "4: Id_2   Xi_2   Y_2" << "\n";
+  OutHelpPointsDb << "   .      .      ." << "\n";
+  OutHelpPointsDb << "   .      .      ." << "\n";
+  OutHelpPointsDb << "   .      .      ." << "\n";
   OutHelpPointsDb.close();
 
   std::string PointDir = helpDir + Message::GetPointFolderRootName() + "XX/" ;
   mkdir(PointDir.c_str(), 0700);
   std::string HelpFunXXDbName = PointDir + Message::GetFunResRootName() + "XX" + Message::GetDBext() +"_help";
   std::ofstream OutHelpFunXXDb(HelpFunXXDbName.c_str(), std::ios_base::out);
-  OutHelpFunXXDb << "Number of \""+ Message::GetPointResRootName() + "XX"+Message::GetDBext() +"\" files in funXX folder (say M)" << "\n";
-  OutHelpFunXXDb << "Total number of MC (Monte Carlo simulations)" << "\n";
-  OutHelpFunXXDb << "Number of MC in file 0" << "\n";
+  OutHelpFunXXDb << "1: Number of \""+ Message::GetPointResRootName() + "XX"+Message::GetDBext() +"\" files in funXX folder" << "\n";
+  OutHelpFunXXDb << "2: Total number of MC (Monte Carlo simulations)" << "\n";
+  /*  OutHelpFunXXDb << "Number of MC in file 0" << "\n";
   OutHelpFunXXDb << "Number of MC in file 1" << "\n";
   OutHelpFunXXDb << "Number of MC in file 2" << "\n";
   OutHelpFunXXDb << "           .          " << "\n";
   OutHelpFunXXDb << "           .          " << "\n";
   OutHelpFunXXDb << "           .          " << "\n";
-  OutHelpFunXXDb << "Number of MC in file M-1" << "\n";
+  OutHelpFunXXDb << "Number of MC in file M-1" << "\n";*/
   OutHelpFunXXDb.close();
 
   std::string FunDir = PointDir + Message::GetFunResFolderRootName() + "XX/" ;
   mkdir(FunDir.c_str(), 0700);
   std::string HelpPointResXXDbName = FunDir + Message::GetPointResRootName() + "XX" + Message::GetDBext() +"_help";
   std::ofstream OutHelpPointResXXDb(HelpPointResXXDbName.c_str(), std::ios_base::out);
-  OutHelpPointResXXDb << "Number of MC (Monte Carlo Simulations) (say M)" << "\n";
-  OutHelpPointResXXDb << "Result 0" << "\n";
-  OutHelpPointResXXDb << "Result 1" << "\n";
-  OutHelpPointResXXDb << "Result 2" << "\n";
-  OutHelpPointResXXDb << "   .    " << "\n";
-  OutHelpPointResXXDb << "   .    " << "\n";
-  OutHelpPointResXXDb << "   .    " << "\n";
-  OutHelpPointResXXDb << "Result M-1" << "\n";
+  OutHelpPointResXXDb << "1:   Number of MC (Monte Carlo Simulations) (say M)" << "\n";
+  OutHelpPointResXXDb << "2:   Result 0" << "\n";
+  OutHelpPointResXXDb << "3:   Result 1" << "\n";
+  OutHelpPointResXXDb << "4:   Result 2" << "\n";
+  OutHelpPointResXXDb << "        .    " << "\n";
+  OutHelpPointResXXDb << "        .    " << "\n";
+  OutHelpPointResXXDb << "        .    " << "\n";
+  OutHelpPointResXXDb << "M+1: Result M-1" << "\n";
 }
 
 
@@ -170,9 +170,9 @@ void Database::ParsePointFiles(){
 
 
 void Database::UpdatePointsToDo(std::vector<double> *Xi, std::vector<double> *Y, std::vector<int> *MCToDo){
-  Message::Info("UpdatePointsToDo...");
   if(Message::RootMpi())
     {
+      Message::Info("UpdatePointsToDo...");
       int nxi = Xi->size();
       int ny = Y->size();
       int nmc = MCToDo->size();
@@ -256,8 +256,8 @@ void Database::BuildFolderPoint(int id)
       else{
 	//Create summary file funXX.db
 	std::ofstream FunDbWrite(FunFileName.c_str(), std::ios_base::out);
-	FunDbWrite << 0 << std::endl; // MC done (total)
 	FunDbWrite << 0 << std::endl; // N files
+	FunDbWrite << 0 << std::endl; // MC done (total)
 	FunDbWrite.close();
       }
     }

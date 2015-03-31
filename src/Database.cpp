@@ -418,6 +418,11 @@ void Database::PrintPOS(std::string FileName)
 {
   if(!Message::RootMpi())
     return;
+  if(nPToPos == 0)
+    {
+      Message::Warning("Post processing impossible: no point detected");
+      return;
+    }
   //Rebuild Database to be sure to have the last informations
   std::vector<double> Xi;
   std::vector<double> Y;

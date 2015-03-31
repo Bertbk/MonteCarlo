@@ -314,11 +314,6 @@ void Database::LaunchMCSimulations()
   int myRank = Message::GetRank();
   std::vector<int> iP_start, iP_end;
   Message::DistributeWork(npToDo, &iP_start, &iP_end);
-  Message::Debug("npToDo = %d", npToDo);
-  for(int i = 0; i < iP_start.size(); i++)
-    Message::Debug("iP_start[%d] = %d", i, iP_start[i]);
-  for(int i = 0; i < iP_end.size(); i++)
-    Message::Debug("iP_end[%d] = %d", i, iP_end[i]);
   for (int iP = iP_start[myRank] ; iP < iP_end[myRank]; iP++)
     {
       int id = PointsIdToDo[iP];

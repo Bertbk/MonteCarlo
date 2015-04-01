@@ -38,8 +38,8 @@ class Database {
   // Launch the MC simulations for every points with id in PointsIdToDo
   void LaunchMCSimulations();
   // Post Processing
-  void PostProcessing(); // Read files
-  void PrintPOS(std::string FileName);
+  void PostProcessing(); // Read files and write funXX.mc
+  void PrintGMSHPOS(); // Write on GMSH format funXX.pos
   int FindPoint(double x, double y);
   Point* GetPointToDo(int index){return Points[PointsIdToDo[index]];}
   Point* GetPoint(int id){return Points[id];}

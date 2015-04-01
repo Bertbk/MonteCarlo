@@ -9,7 +9,6 @@ class Message{
   static int m_ComputeMC; // Launch MC simulations ?
   static int m_Pos; // Only (re-)compute average/std deviation ?
   static int m_Gmsh;  // Print on Gmsh file with filename GMSHFileName (root, no extension)
-  static std::string GMSHFileName;
   static std::string m_paramFile;
   static std::string m_resDir, m_helpDir;
   static int m_verbosity;
@@ -77,7 +76,6 @@ class Message{
   static int GetRestart(){return m_restart;};
   static int GetPos(){return m_Pos;};
   static int GetGmsh(){return m_Gmsh;};
-  static std::string GetGMSHFileName(){return GMSHFileName;};
   static const int GetNFUN(){return m_NFUN;};
   static std::string GetResDir(){return m_resDir;};
   static std::string GetHelpDir(){return m_helpDir;};

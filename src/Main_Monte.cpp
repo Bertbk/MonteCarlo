@@ -34,13 +34,11 @@ int main(int argc, char *argv[])
     {
       if(Message::RootMpi())
 	Message::Info("Let's do some Post Processing...");
-      // write file funXX.pos on root folder
-      Db.PostProcessing(); 
-    }
-  if(Message::GetGmsh())
-    {
-      // write .pos files (need GMSH)
-      Db.PrintPOS(Message::GetGMSHFileName());
+      // write file funXX.mc on root folder
+      Db.PostProcessing();
+      //Gmsh format: funXX.pos
+      if(Message::GetGmsh())
+	  Db.PrintGMSHPOS();
     }
   //Exit smoothly like a boss
   Message::Finalize(EXIT_SUCCESS);

@@ -414,7 +414,7 @@ void Database::ExtractXYRes(std::vector<double> *Xi,std::vector<double> *Y,std::
     }
 }
 
-void Database::PrintPOS(std::string FileName)
+void Database::PrintGMSHPOS()
 {
   if(!Message::RootMpi())
     return;
@@ -433,8 +433,8 @@ void Database::PrintPOS(std::string FileName)
   Mesh myMesh(Xi, Y);
   myMesh.SetRes(&res);
   myMesh.Update();
-  myMesh.PrintRes(Message::GetResDir()+FileName);
-  myMesh.PrintMesh(Message::GetResDir()+"lol");
+  myMesh.PrintGMSHRes(Message::GetResDir() + Message::GetFunResRootName());
+  myMesh.PrintMesh(Message::GetResDir()+"mesh");
 }
 
 void Database::Broadcast(int rank)

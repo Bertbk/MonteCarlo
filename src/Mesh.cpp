@@ -268,7 +268,7 @@ void Mesh::PrintMesh(std::string Filename)
 }
 
 
-void Mesh::PrintRes(std::string RootFileName)
+void Mesh::PrintGMSHRes(std::string RootFileName)
 {
   int iTri = m_connectivity.size();
   for (int ifun = 0; ifun < Message::GetNFUN(); ifun++)

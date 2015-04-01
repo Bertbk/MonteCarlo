@@ -45,7 +45,7 @@ class Mesh{
   //Usefull for checking, for example
   void PrintMesh(std::string FileName);
   //Print GetDP .pos format m_res vector on the points.
-  void PrintRes(std::string RootFileName);
+  void PrintGMSHRes(std::string RootFileName);
 };
 
 
